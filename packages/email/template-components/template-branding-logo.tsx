@@ -20,6 +20,10 @@ export const TemplateBrandingLogo = ({ assetBaseUrl, className = 'mb-4 h-6' }: T
   const hasCustomBrandingLogo = branding.brandingEnabled && Boolean(branding.brandingLogo);
 
   if (!hasCustomBrandingLogo) {
+    if (branding.brandingHidePoweredBy) {
+      return null;
+    }
+
     const documensoLogoUrl = new URL('/static/logo.png', assetBaseUrl).toString();
 
     return <Img src={documensoLogoUrl} alt="Documenso Logo" className={className} />;

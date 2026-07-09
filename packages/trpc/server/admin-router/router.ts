@@ -1,4 +1,5 @@
 import { router } from '../trpc';
+import { addOrganisationMemberRoute } from './add-organisation-member';
 import { createAdminOrganisationRoute } from './create-admin-organisation';
 import { createStripeCustomerRoute } from './create-stripe-customer';
 import { createSubscriptionClaimRoute } from './create-subscription-claim';
@@ -62,6 +63,7 @@ export const adminRouter = router({
     },
   },
   organisationMember: {
+    add: addOrganisationMemberRoute,
     promoteToOwner: promoteMemberToOwnerRoute,
     updateRole: updateOrganisationMemberRoleRoute,
     delete: deleteAdminOrganisationMemberRoute,

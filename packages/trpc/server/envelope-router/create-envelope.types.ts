@@ -86,6 +86,7 @@ export const ZCreateEnvelopeRequestSchema = zodFormData({
 
 export const ZCreateEnvelopeResponseSchema = z.object({
   id: z.string(),
+  envelopeItemId: z.string(),
 });
 
 export type TCreateEnvelopePayload = z.infer<typeof ZCreateEnvelopePayloadSchema>;

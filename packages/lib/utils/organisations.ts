@@ -110,7 +110,7 @@ export const generateDefaultOrganisationSettings = (): Omit<OrganisationGlobalSe
     documentLanguage: 'en',
     documentTimezone: null, // Null means local timezone.
     documentDateFormat: DEFAULT_DOCUMENT_DATE_FORMAT,
-    delegateDocumentOwnership: false,
+    delegateDocumentOwnership: true,
 
     includeSenderDetails: true,
     includeSigningCertificate: true,
@@ -120,7 +120,7 @@ export const generateDefaultOrganisationSettings = (): Omit<OrganisationGlobalSe
     uploadSignatureEnabled: true,
     drawSignatureEnabled: true,
 
-    brandingEnabled: false,
+    brandingEnabled: true,
     brandingLogo: '',
     brandingUrl: '',
     brandingCompanyDetails: '',

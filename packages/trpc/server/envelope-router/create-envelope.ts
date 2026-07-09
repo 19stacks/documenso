@@ -200,5 +200,6 @@ export const createEnvelopeRouteCaller = async ({
 
   return {
     id: envelope.id,
+    envelopeItemId: envelope.envelopeItems[0].id,
   };
 };

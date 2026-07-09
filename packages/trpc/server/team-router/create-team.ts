@@ -17,11 +17,15 @@ export const createTeamRoute = authenticatedProcedure
       },
     });
 
-    return await createTeam({
+    const team = await createTeam({
       userId: user.id,
       teamName,
       teamUrl,
       organisationId,
       inheritMembers,
     });
+
+    return {
+      teamId: team.id,
+    };
   });

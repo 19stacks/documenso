@@ -22,7 +22,7 @@ export const ZCreateOrganisationRequestSchema = z.object({
 
 export const ZCreateOrganisationResponseSchema = z.union([
   z.object({
-    paymentRequired: z.literal(false),
+    organisationId: z.string(),
   }),
   z.object({
     paymentRequired: z.literal(true),

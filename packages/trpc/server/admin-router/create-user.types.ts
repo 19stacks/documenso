@@ -4,6 +4,7 @@ import { z } from 'zod';
 export const ZCreateUserRequestSchema = z.object({
   email: z.string().email().min(1),
   name: ZNameSchema,
+  password: z.string().min(1),
 });
 
 export type TCreateUserRequest = z.infer<typeof ZCreateUserRequestSchema>;

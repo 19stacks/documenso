@@ -71,14 +71,16 @@ export default function EnvelopeEditorHeader() {
     <nav className="w-full border-border border-b bg-background px-4 py-3 md:px-6">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 flex-1 items-center space-x-4">
-          {editorConfig.embedded?.customBrandingLogo ? (
-            <img src={`/api/branding/logo/team/${envelope.teamId}`} alt="Logo" className="h-6 w-auto" />
+          {editorConfig.embedded ? (
+            editorConfig.embedded.customBrandingLogo && (
+              <img src={`/api/branding/logo/team/${envelope.teamId}`} alt="Logo" className="h-6 w-auto" />
+            )
           ) : (
             <Link to="/">
               <BrandingLogo className="h-6 w-auto" />
             </Link>
           )}
-          <Separator orientation="vertical" className="h-6 shrink-0" />
+          {!editorConfig.embedded && <Separator orientation="vertical" className="h-6 shrink-0" />}
 
           <div className="flex min-w-0 items-center space-x-2">
             <EnvelopeItemTitleInput

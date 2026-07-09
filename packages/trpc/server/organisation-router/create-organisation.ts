@@ -116,7 +116,7 @@ export const createOrganisationRoute = authenticatedProcedure
 
     const freeSubscriptionClaim = await getSubscriptionClaim(INTERNAL_CLAIM_ID.FREE);
 
-    await createOrganisation({
+    const organisation = await createOrganisation({
       userId: user.id,
       name,
       type: organisationType,
@@ -124,6 +124,6 @@ export const createOrganisationRoute = authenticatedProcedure
     });
 
     return {
-      paymentRequired: false,
+      organisationId: organisation.id,
     };
   });

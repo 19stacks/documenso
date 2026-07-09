@@ -22,6 +22,8 @@ export const ZCreateTeamRequestSchema = z.object({
     ),
 });
 
-export const ZCreateTeamResponseSchema = z.void();
+export const ZCreateTeamResponseSchema = z.object({
+  teamId: z.number(),
+});
 
 export type TCreateTeamRequest = z.infer<typeof ZCreateTeamRequestSchema>;

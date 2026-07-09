@@ -31,6 +31,7 @@ export default defineConfig({
   server: {
     port: parseInt(process.env.PORT || '3000', 10),
     strictPort: true,
+    allowedHosts: true,
   },
   plugins: [
     viteStaticCopy({

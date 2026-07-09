@@ -121,7 +121,7 @@ export const createTeam = async ({ userId, teamName, teamUrl, organisationId, in
         .exhaustive(),
     );
 
-  await prisma
+  return await prisma
     .$transaction(
       async (tx) => {
         const teamSettings = await tx.teamGlobalSettings.create({
@@ -173,6 +173,8 @@ export const createTeam = async ({ userId, teamName, teamUrl, organisationId, in
             }),
           ),
         );
+
+        return team;
       },
       {
         timeout: 7500,
