@@ -1684,8 +1684,8 @@ msgid "An admin has deleted your document \"{documentName}\"."
 msgstr "Un administrateur a supprimé votre document \"{documentName}\"."
 
 #: packages/email/template-components/template-admin-user-created.tsx
-msgid "An administrator has created a Documenso account for you."
-msgstr "Un administrateur a créé un compte Documenso pour vous."
+msgid "An administrator has created an account for you."
+msgstr ""
 
 #: apps/remix/app/routes/_unauthenticated+/articles.signature-disclosure.tsx
 msgid "An electronic signature provided by you on our platform, achieved through clicking through to a document and entering your name, or any other electronic signing method we provide, is legally binding. It carries the same weight and enforceability as a manual signature written with ink on paper."
@@ -4214,8 +4214,8 @@ msgstr "Document annulé"
 
 #: apps/remix/app/routes/_recipient+/sign.$token+/_index.tsx
 #: apps/remix/app/routes/_recipient+/sign.$token+/_index.tsx
+#: packages/lib/jobs/definitions/emails/send-document-deleted-emails.handler.ts
 #: packages/lib/server-only/admin/admin-super-delete-document.ts
-#: packages/lib/server-only/document/delete-document.ts
 msgid "Document Cancelled"
 msgstr "Document Annulé"
 
@@ -6273,8 +6273,8 @@ msgid "If you did not expect this email or believe it is spam, you can report th
 msgstr "Si vous ne vous attendiez pas à recevoir cet e‑mail ou si vous pensez qu’il s’agit de spam, vous pouvez signaler l’expéditeur à notre équipe pour vérification."
 
 #: packages/email/template-components/template-admin-user-created.tsx
-msgid "If you didn't expect this account or have any questions, please <0>contact support</0>."
-msgstr "Si vous n’attendiez pas ce compte ou si vous avez des questions, veuillez <0>contacter l’assistance</0>."
+msgid "If you didn't expect this account or have any questions, please contact your administrator."
+msgstr ""
 
 #: packages/email/template-components/template-access-auth-2fa.tsx
 msgid "If you didn't request this verification code, you can safely ignore this email."
@@ -7941,6 +7941,11 @@ msgstr "Original"
 #: apps/remix/app/components/dialogs/template-use-dialog.tsx
 msgid "Otherwise, the document will be created as a draft."
 msgstr "Sinon, le document sera créé sous forme de brouillon."
+
+#: apps/remix/app/components/dialogs/envelope-distribute-dialog.tsx
+#: apps/remix/app/components/general/envelope-editor/envelope-editor-fields-page.tsx
+msgid "Overlapping fields detected"
+msgstr ""
 
 #: apps/remix/app/components/forms/document-preferences-form.tsx
 #: apps/remix/app/components/forms/email-preferences-form.tsx
@@ -9837,8 +9842,8 @@ msgid "Set up your template properties and recipient information"
 msgstr "Configurez les propriétés de votre modèle et les informations du destinataire"
 
 #: packages/email/templates/admin-user-created.tsx
-msgid "Set your password for Documenso"
-msgstr "Définissez votre mot de passe pour Documenso"
+msgid "Set your password"
+msgstr ""
 
 #: apps/remix/app/components/general/app-command-menu.tsx
 #: apps/remix/app/components/general/app-command-menu.tsx
@@ -10218,6 +10223,11 @@ msgstr "Paramètres du site"
 #: apps/remix/app/components/dialogs/ai-recipient-detection-dialog.tsx
 msgid "Skip"
 msgstr "Ignorer"
+
+#: apps/remix/app/components/dialogs/envelope-distribute-dialog.tsx
+#: apps/remix/app/components/general/envelope-editor/envelope-editor-fields-page.tsx
+msgid "Some fields are placed on top of each other. This may complicate the signing process or cause fields to not work as expected."
+msgstr ""
 
 #: packages/ui/primitives/document-flow/missing-signature-field-dialog.tsx
 msgid "Some signers have not been assigned a signature field. Please assign at least 1 signature field to each signer before proceeding."
@@ -12942,7 +12952,7 @@ msgstr "En attente"
 msgid "Waiting for others"
 msgstr "En attente des autres"
 
-#: packages/lib/server-only/document/send-pending-email.ts
+#: packages/lib/jobs/definitions/emails/send-document-pending-email.handler.ts
 msgid "Waiting for others to complete signing."
 msgstr "En attente que d'autres terminent la signature."
 
@@ -13433,10 +13443,13 @@ msgstr "Bienvenue chez {organisationName}"
 msgid "Welcome to Documenso"
 msgstr "Bienvenue sur Documenso"
 
-#: packages/email/template-components/template-admin-user-created.tsx
 #: packages/email/template-components/template-confirmation-email.tsx
 msgid "Welcome to Documenso!"
 msgstr "Bienvenue sur Documenso !"
+
+#: packages/email/template-components/template-admin-user-created.tsx
+msgid "Welcome!"
+msgstr ""
 
 #: apps/remix/app/routes/_authenticated+/o.$orgUrl.settings.sso.tsx
 msgid "Well-known URL is required"
@@ -13916,8 +13929,7 @@ msgstr "Vous avez été invité à rejoindre {0} sur Documenso"
 msgid "You have been invited to join the following organisation"
 msgstr "Vous avez été invité à rejoindre l'organisation suivante"
 
-#: packages/lib/server-only/recipient/delete-envelope-recipient.ts
-#: packages/lib/server-only/recipient/set-document-recipients.ts
+#: packages/lib/jobs/definitions/emails/send-recipient-removed-email.handler.ts
 msgid "You have been removed from a document"
 msgstr "Vous avez été supprimé d'un document"
 
@@ -14716,4 +14728,3 @@ msgstr "Votre code de vérification :"
 #: apps/remix/app/routes/_authenticated+/o.$orgUrl.settings.sso.tsx
 msgid "your-domain.com another-domain.com"
 msgstr "your-domain.com another-domain.com"
-

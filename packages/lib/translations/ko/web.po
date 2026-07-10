@@ -1684,8 +1684,8 @@ msgid "An admin has deleted your document \"{documentName}\"."
 msgstr "관리자가 귀하의 \"{documentName}\" 문서를 삭제했습니다."
 
 #: packages/email/template-components/template-admin-user-created.tsx
-msgid "An administrator has created a Documenso account for you."
-msgstr "관리자가 회원님을 위해 Documenso 계정을 생성했습니다."
+msgid "An administrator has created an account for you."
+msgstr ""
 
 #: apps/remix/app/routes/_unauthenticated+/articles.signature-disclosure.tsx
 msgid "An electronic signature provided by you on our platform, achieved through clicking through to a document and entering your name, or any other electronic signing method we provide, is legally binding. It carries the same weight and enforceability as a manual signature written with ink on paper."
@@ -4214,8 +4214,8 @@ msgstr "문서가 취소되었습니다"
 
 #: apps/remix/app/routes/_recipient+/sign.$token+/_index.tsx
 #: apps/remix/app/routes/_recipient+/sign.$token+/_index.tsx
+#: packages/lib/jobs/definitions/emails/send-document-deleted-emails.handler.ts
 #: packages/lib/server-only/admin/admin-super-delete-document.ts
-#: packages/lib/server-only/document/delete-document.ts
 msgid "Document Cancelled"
 msgstr "문서가 취소됨"
 
@@ -6273,8 +6273,8 @@ msgid "If you did not expect this email or believe it is spam, you can report th
 msgstr "이 이메일을 예상하지 못했거나 스팸이라고 생각되면, 검토를 위해 보낸 사람을 저희 팀에 신고할 수 있습니다."
 
 #: packages/email/template-components/template-admin-user-created.tsx
-msgid "If you didn't expect this account or have any questions, please <0>contact support</0>."
-msgstr "이 계정을 예상하지 못했거나 궁금한 점이 있으시면 <0>지원팀에 문의해 주세요</0>."
+msgid "If you didn't expect this account or have any questions, please contact your administrator."
+msgstr ""
 
 #: packages/email/template-components/template-access-auth-2fa.tsx
 msgid "If you didn't request this verification code, you can safely ignore this email."
@@ -7941,6 +7941,11 @@ msgstr "원본"
 #: apps/remix/app/components/dialogs/template-use-dialog.tsx
 msgid "Otherwise, the document will be created as a draft."
 msgstr "그렇지 않으면 문서는 초안으로 생성됩니다."
+
+#: apps/remix/app/components/dialogs/envelope-distribute-dialog.tsx
+#: apps/remix/app/components/general/envelope-editor/envelope-editor-fields-page.tsx
+msgid "Overlapping fields detected"
+msgstr ""
 
 #: apps/remix/app/components/forms/document-preferences-form.tsx
 #: apps/remix/app/components/forms/email-preferences-form.tsx
@@ -9837,8 +9842,8 @@ msgid "Set up your template properties and recipient information"
 msgstr "템플릿 속성과 수신자 정보를 설정하세요."
 
 #: packages/email/templates/admin-user-created.tsx
-msgid "Set your password for Documenso"
-msgstr "Documenso 계정의 비밀번호를 설정하세요"
+msgid "Set your password"
+msgstr ""
 
 #: apps/remix/app/components/general/app-command-menu.tsx
 #: apps/remix/app/components/general/app-command-menu.tsx
@@ -10218,6 +10223,11 @@ msgstr "사이트 설정"
 #: apps/remix/app/components/dialogs/ai-recipient-detection-dialog.tsx
 msgid "Skip"
 msgstr "건너뛰기"
+
+#: apps/remix/app/components/dialogs/envelope-distribute-dialog.tsx
+#: apps/remix/app/components/general/envelope-editor/envelope-editor-fields-page.tsx
+msgid "Some fields are placed on top of each other. This may complicate the signing process or cause fields to not work as expected."
+msgstr ""
 
 #: packages/ui/primitives/document-flow/missing-signature-field-dialog.tsx
 msgid "Some signers have not been assigned a signature field. Please assign at least 1 signature field to each signer before proceeding."
@@ -12942,7 +12952,7 @@ msgstr "대기 중"
 msgid "Waiting for others"
 msgstr "다른 사람을 기다리는 중"
 
-#: packages/lib/server-only/document/send-pending-email.ts
+#: packages/lib/jobs/definitions/emails/send-document-pending-email.handler.ts
 msgid "Waiting for others to complete signing."
 msgstr "다른 서명자들이 이 문서에 서명 완료하기를 기다리는 중입니다."
 
@@ -13433,10 +13443,13 @@ msgstr "{organisationName}에 오신 것을 환영합니다"
 msgid "Welcome to Documenso"
 msgstr "Documenso에 오신 것을 환영합니다"
 
-#: packages/email/template-components/template-admin-user-created.tsx
 #: packages/email/template-components/template-confirmation-email.tsx
 msgid "Welcome to Documenso!"
 msgstr "Documenso에 오신 것을 환영합니다!"
+
+#: packages/email/template-components/template-admin-user-created.tsx
+msgid "Welcome!"
+msgstr ""
 
 #: apps/remix/app/routes/_authenticated+/o.$orgUrl.settings.sso.tsx
 msgid "Well-known URL is required"
@@ -13916,8 +13929,7 @@ msgstr "Documenso에서 {0} 조직에 초대되었습니다."
 msgid "You have been invited to join the following organisation"
 msgstr "다음 조직에 참여하라는 초대를 받았습니다."
 
-#: packages/lib/server-only/recipient/delete-envelope-recipient.ts
-#: packages/lib/server-only/recipient/set-document-recipients.ts
+#: packages/lib/jobs/definitions/emails/send-recipient-removed-email.handler.ts
 msgid "You have been removed from a document"
 msgstr "문서에서 제거되었습니다."
 
@@ -14716,4 +14728,3 @@ msgstr "인증 코드:"
 #: apps/remix/app/routes/_authenticated+/o.$orgUrl.settings.sso.tsx
 msgid "your-domain.com another-domain.com"
 msgstr "your-domain.com another-domain.com"
-
