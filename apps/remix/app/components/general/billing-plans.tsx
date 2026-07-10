@@ -175,7 +175,7 @@ const BillingDialog = ({ priceId, planName, claim }: { priceId: string; planName
           priceId,
         });
 
-        if (!createOrganisationResponse.paymentRequired) {
+        if (!('paymentRequired' in createOrganisationResponse)) {
           setIsOpen(false);
           return;
         }

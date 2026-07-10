@@ -86,7 +86,7 @@ export const OrganisationCreateDialog = ({ trigger, ...props }: OrganisationCrea
         priceId: selectedPriceId,
       });
 
-      if (response.paymentRequired) {
+      if ('paymentRequired' in response) {
         window.open(response.checkoutUrl, '_blank');
         setOpen(false);
 
