@@ -11,7 +11,6 @@ import { Separator } from '@documenso/ui/primitives/separator';
 import { Plural, Trans } from '@lingui/react/macro';
 import { EnvelopeType, RecipientRole } from '@prisma/client';
 import { BanIcon, DownloadCloudIcon } from 'lucide-react';
-import { Link } from 'react-router';
 import { match } from 'ts-pattern';
 
 import { EnvelopeDownloadDialog } from '~/components/dialogs/envelope-download-dialog';
@@ -41,10 +40,10 @@ export const EnvelopeSignerHeader = () => {
               className="h-6 w-auto flex-shrink-0"
             />
           ) : (
-            <Link to="/" className="flex-shrink-0">
-              <BrandingLogo className="hidden h-6 w-auto md:block" />
-              <BrandingLogoIcon className="h-6 w-auto md:hidden" />
-            </Link>
+            <>
+              <BrandingLogo className="hidden h-6 w-auto flex-shrink-0 md:block" />
+              <BrandingLogoIcon className="h-6 w-auto flex-shrink-0 md:hidden" />
+            </>
           ))}
 
         <h1 title={envelope.title} className="min-w-0 truncate font-semibold text-base text-foreground md:hidden">

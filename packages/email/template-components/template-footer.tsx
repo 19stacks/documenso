@@ -62,7 +62,7 @@ export const TemplateFooter = ({ isDocument = true, reportUrl }: TemplateFooterP
         </Text>
       )}
 
-      {!branding.brandingEnabled && (
+      {!branding.brandingEnabled && !branding.brandingHidePoweredBy && (
         <Text className="my-8 text-muted-foreground text-sm">
           Documenso, Inc.
           <br />
