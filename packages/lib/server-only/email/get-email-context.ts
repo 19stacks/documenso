@@ -220,7 +220,7 @@ const handleOrganisationEmailContext = async (organisationId: string) => {
   const branding = organisationGlobalSettingsToBranding(
     organisation.organisationGlobalSettings,
     organisation.id,
-    claims.flags.hidePoweredBy ?? false,
+    claims.flags.hidePoweredBy ?? !IS_BILLING_ENABLED(),
   );
 
   const allowBrandedEmailColors = !IS_BILLING_ENABLED() || claims.flags.embedSigningWhiteLabel === true;
@@ -281,7 +281,11 @@ const handleTeamEmailContext = async (teamId: number) => {
 
   const teamSettings = extractDerivedTeamSettings(organisation.organisationGlobalSettings, team.teamGlobalSettings);
 
-  const branding = teamGlobalSettingsToBranding(teamSettings, teamId, claims.flags.hidePoweredBy ?? false);
+  const branding = teamGlobalSettingsToBranding(
+    teamSettings,
+    teamId,
+    claims.flags.hidePoweredBy ?? !IS_BILLING_ENABLED(),
+  );
 
   const allowBrandedEmailColors = !IS_BILLING_ENABLED() || claims.flags.embedSigningWhiteLabel === true;
 
