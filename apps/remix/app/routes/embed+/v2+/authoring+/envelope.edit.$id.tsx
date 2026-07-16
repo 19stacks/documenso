@@ -204,6 +204,7 @@ const EnvelopeEditPage = ({ embedAuthoringOptions }: EnvelopeEditPageProps) => {
       }));
 
       return {
+        id: recipient.id,
         email: recipient.email,
         name: recipient.name,
         role: recipient.role,

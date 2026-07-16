@@ -1,6 +1,7 @@
 import { tsRestHonoApp } from '@documenso/api/hono';
 import { auth } from '@documenso/auth/server';
 import { csc } from '@documenso/ee/server-only/signing/csc/hono';
+import { AppError, genericErrorCodeToTrpcErrorCodeMap } from '@documenso/lib/errors/app-error';
 import { jobsClient } from '@documenso/lib/jobs/client';
 import { LicenseClient } from '@documenso/lib/server-only/license/license-client';
 import { createRateLimitMiddleware } from '@documenso/lib/server-only/rate-limit/rate-limit-middleware';
@@ -157,5 +158,20 @@ jobsClient.startCron();
 
 void migrateDeletedAccountServiceAccount();
 void migrateLegacyServiceAccount();
+
+app.onError((err, c) => {
+  const error = AppError.parseError(err);
+
+  const mapped = genericErrorCodeToTrpcErrorCodeMap[error.code];
+
+  if (mapped) {
+    return c.json(
+      { message: error.message, code: error.code, statusCode: mapped.status },
+      mapped.status as 400 | 401 | 403 | 404 | 429,
+    );
+  }
+
+  return c.json({ message: 'Internal server error' }, 500);
+});
 
 export default app;

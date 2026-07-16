@@ -8,7 +8,6 @@ import { jobs } from '../../jobs/client';
 import { extractDerivedDocumentEmailSettings } from '../../types/document-email';
 import { createDocumentAuditLogData } from '../../utils/document-audit-logs';
 import { canRecipientBeModified, isRecipientEmailValidForSending } from '../../utils/recipients';
-import { buildTeamWhereQuery } from '../../utils/teams';
 import { assertEnvelopeMutable } from '../envelope/assert-envelope-mutable';
 import { getEnvelopeWhereInput } from '../envelope/get-envelope-by-id';
 
@@ -32,7 +31,7 @@ export const deleteEnvelopeRecipient = async ({
           id: recipientId,
         },
       },
-      team: buildTeamWhereQuery({ teamId, userId }),
+      teamId,
     },
     include: {
       documentMeta: true,
