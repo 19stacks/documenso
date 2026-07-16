@@ -1,4 +1,5 @@
 import { AppDebugger } from '@documenso/lib/utils/debugger';
+import { env } from '@documenso/lib/utils/env';
 import type { Context, Next } from 'hono';
 import { setCookie } from 'hono/cookie';
 
@@ -22,6 +23,15 @@ export const appMiddleware = async (c: Context, next: Next) => {
   // Paths to ignore.
   if (nonPagePathRegex.test(path)) {
     return next();
+  }
+
+  if (env('NEXT_PUBLIC_DISABLE_UI') === 'true') {
+    const allowedPathRegex =
+      /^\/(_recipient\/|d\/|embed\/|share\/|sign\/|_share\/|_redirects\/|_internal\/|_profile\/)/;
+
+    if (!allowedPathRegex.test(path)) {
+      return new Response(null, { status: 404 });
+    }
   }
 
   // PRE-HANDLER CODE: Place code here to execute BEFORE the route handler runs.
