@@ -75,6 +75,7 @@ export const buildEmbeddedFeatures = (features: DeepPartial<EnvelopeEditorConfig
 
     actions: {
       allowAttachments: features.actions?.allowAttachments ?? DEFAULT_EMBEDDED_EDITOR_CONFIG.actions.allowAttachments,
+      allowSubmitting: features.actions?.allowSubmitting ?? DEFAULT_EMBEDDED_EDITOR_CONFIG.actions.allowSubmitting,
       allowDistributing:
         features.actions?.allowDistributing ?? DEFAULT_EMBEDDED_EDITOR_CONFIG.actions.allowDistributing,
       allowDirectLink: features.actions?.allowDirectLink ?? DEFAULT_EMBEDDED_EDITOR_CONFIG.actions.allowDirectLink,

@@ -244,7 +244,7 @@ export default function EnvelopeEditorHeader() {
             </Button>
           )}
 
-          {embedded?.mode === 'edit' && (
+          {embedded?.mode === 'edit' && embedded?.onUpdate && (
             <Button size="sm" onClick={handleUpdateEmbeddedEnvelope}>
               {isDocument ? <Trans>Update Document</Trans> : <Trans>Update Template</Trans>}
             </Button>

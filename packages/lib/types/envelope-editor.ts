@@ -53,6 +53,7 @@ export const ZEnvelopeEditorSettingsSchema = z.object({
    */
   actions: z.object({
     allowAttachments: z.boolean(),
+    allowSubmitting: z.boolean(),
     allowDistributing: z.boolean(),
     allowDirectLink: z.boolean(),
     allowDuplication: z.boolean(),
@@ -128,6 +129,7 @@ export const DEFAULT_EDITOR_CONFIG: EnvelopeEditorConfig = {
   },
   actions: {
     allowAttachments: true,
+    allowSubmitting: true,
     allowDistributing: true,
     allowDirectLink: true,
     allowDuplication: true,
@@ -187,6 +189,7 @@ export const DEFAULT_EMBEDDED_EDITOR_CONFIG = {
   },
   actions: {
     allowAttachments: true,
+    allowSubmitting: true,
     allowDistributing: false, // These are not supported for embeds, and are directly excluded in the embedded repo.
     allowDirectLink: false, // These are not supported for embeds, and are directly excluded in the embedded repo.
     allowDuplication: false, // These are not supported for embeds, and are directly excluded in the embedded repo.

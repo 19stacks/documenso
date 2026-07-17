@@ -298,11 +298,16 @@ const EnvelopeEditPage = ({ embedAuthoringOptions }: EnvelopeEditPageProps) => {
     () => ({
       presignToken: token,
       mode: 'edit' as const,
-      onUpdate: async (envelope: TEditorEnvelope) => updateEmbeddedEnvelope(envelope),
+      ...(((embedAuthoringOptions?.features as Record<string, unknown>)?.actions as Record<string, unknown>)
+        ?.allowSubmitting !== false
+        ? {
+            onUpdate: async (envelope: TEditorEnvelope) => updateEmbeddedEnvelope(envelope),
+          }
+        : {}),
       customBrandingLogo: Boolean(brandingLogo),
       user: embedAuthoringOptions.user,
     }),
-    [token, brandingLogo, embedAuthoringOptions.user],
+    [token, brandingLogo, embedAuthoringOptions.user, embedAuthoringOptions?.features],
   );
 
   const editorConfig = useMemo(() => {
