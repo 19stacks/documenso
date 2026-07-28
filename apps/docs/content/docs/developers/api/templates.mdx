@@ -463,6 +463,7 @@ const response = await fetch(`${BASE_URL}/template/use`, {
       typedSignatureEnabled: true,
       uploadSignatureEnabled: false,
       drawSignatureEnabled: true,
+      qrSignatureEnabled: true,
     },
     distributeDocument: true,
   }),
@@ -483,6 +484,7 @@ const response = await fetch(`${BASE_URL}/template/use`, {
 | `typedSignatureEnabled`  | boolean | Allow typed signatures          |
 | `uploadSignatureEnabled` | boolean | Allow uploaded signature images |
 | `drawSignatureEnabled`   | boolean | Allow drawn signatures          |
+| `qrSignatureEnabled`     | boolean | Allow QR code handoff to a mobile device |
 
 ---
 

@@ -384,6 +384,7 @@ export const EnvelopeSignerPageRenderer = ({ pageData }: { pageData: PageRenderD
             typedSignatureEnabled: envelope.documentMeta.typedSignatureEnabled,
             uploadSignatureEnabled: envelope.documentMeta.uploadSignatureEnabled,
             drawSignatureEnabled: envelope.documentMeta.drawSignatureEnabled,
+            qrSignatureEnabled: envelope.documentMeta.qrSignatureEnabled,
           })
             .then(async (payload) => {
               if (!payload) {
