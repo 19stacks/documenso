@@ -11091,6 +11091,10 @@ msgstr "Der Dokumenteninhaber wurde über diese Ablehnung informiert. Es sind de
 msgid "The document owner has been notified of your decision. They may contact you with further instructions if necessary."
 msgstr "Der Dokumenteneigentümer wurde über Ihre Entscheidung informiert. Er kann Sie bei Bedarf mit weiteren Anweisungen kontaktieren."
 
+#: packages/email/template-components/template-document-rejected.tsx
+msgid "The document owner has been notified. You can view the document status from your Wize dashboard."
+msgstr ""
+
 #. placeholder {0}: data.delegatedOwnerName || data.delegatedOwnerEmail
 #. placeholder {1}: data.teamName
 #: packages/lib/utils/document-audit-logs.ts
@@ -12834,7 +12838,6 @@ msgstr "Dokument anzeigen"
 #: apps/remix/app/components/general/document-signing/document-signing-page-view-v1.tsx
 #: apps/remix/app/components/general/document-signing/document-signing-page-view-v2.tsx
 #: packages/email/template-components/template-document-invite.tsx
-#: packages/email/template-components/template-document-rejected.tsx
 #: packages/email/template-components/template-document-reminder.tsx
 #: packages/email/template-components/template-recipient-expired.tsx
 #: packages/ui/primitives/document-flow/add-subject.tsx
@@ -13785,10 +13788,6 @@ msgstr "Sie können Dokumente ansehen, die mit dieser E-Mail verknüpft sind, un
 #: packages/email/templates/bulk-send-complete.tsx
 msgid "You can view the created documents in your dashboard under the \"Documents created from template\" section."
 msgstr "Sie können die erstellten Dokumente in Ihrem Dashboard unter der Rubrik \"Dokumente, die aus Vorlage erstellt wurden\" einsehen."
-
-#: packages/email/template-components/template-document-rejected.tsx
-msgid "You can view the document and its status by clicking the button below."
-msgstr "Sie können das Dokument und seinen Status einsehen, indem Sie auf die Schaltfläche unten klicken."
 
 #: packages/lib/utils/document-audit-logs.ts
 msgid "You cancelled the document"

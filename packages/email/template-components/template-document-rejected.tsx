@@ -1,6 +1,6 @@
 import { Trans } from '@lingui/react/macro';
 
-import { Button, Heading, Text } from '../components';
+import { Heading, Text } from '../components';
 
 export interface TemplateDocumentRejectedProps {
   documentName: string;
@@ -13,7 +13,6 @@ export function TemplateDocumentRejected({
   documentName,
   recipientName: signerName,
   rejectionReason,
-  documentUrl,
 }: TemplateDocumentRejectedProps) {
   return (
     <div className="mt-4">
@@ -34,15 +33,8 @@ export function TemplateDocumentRejected({
       )}
 
       <Text className="mb-6 text-base">
-        <Trans>You can view the document and its status by clicking the button below.</Trans>
+        <Trans>The document owner has been notified. You can view the document status from your Wize dashboard.</Trans>
       </Text>
-
-      <Button
-        href={documentUrl}
-        className="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 text-center font-medium text-primary-foreground text-sm no-underline"
-      >
-        <Trans>View Document</Trans>
-      </Button>
     </div>
   );
 }

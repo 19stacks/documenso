@@ -11091,6 +11091,10 @@ msgstr "文档所有者已收到此次拒签的通知。当前您无需再进行
 msgid "The document owner has been notified of your decision. They may contact you with further instructions if necessary."
 msgstr "文档所有者已收到您的决定通知。如有需要，他们可能会联系您并提供进一步说明。"
 
+#: packages/email/template-components/template-document-rejected.tsx
+msgid "The document owner has been notified. You can view the document status from your Wize dashboard."
+msgstr ""
+
 #. placeholder {0}: data.delegatedOwnerName || data.delegatedOwnerEmail
 #. placeholder {1}: data.teamName
 #: packages/lib/utils/document-audit-logs.ts
@@ -12834,7 +12838,6 @@ msgstr "查看文档"
 #: apps/remix/app/components/general/document-signing/document-signing-page-view-v1.tsx
 #: apps/remix/app/components/general/document-signing/document-signing-page-view-v2.tsx
 #: packages/email/template-components/template-document-invite.tsx
-#: packages/email/template-components/template-document-rejected.tsx
 #: packages/email/template-components/template-document-reminder.tsx
 #: packages/email/template-components/template-recipient-expired.tsx
 #: packages/ui/primitives/document-flow/add-subject.tsx
@@ -13785,10 +13788,6 @@ msgstr "你可以查看与此邮箱相关的文档，并在发送文档时使用
 #: packages/email/templates/bulk-send-complete.tsx
 msgid "You can view the created documents in your dashboard under the \"Documents created from template\" section."
 msgstr "您可以在控制台的“由模板创建的文档”部分查看创建的文档。"
-
-#: packages/email/template-components/template-document-rejected.tsx
-msgid "You can view the document and its status by clicking the button below."
-msgstr "您可以点击下方按钮查看文档及其状态。"
 
 #: packages/lib/utils/document-audit-logs.ts
 msgid "You cancelled the document"

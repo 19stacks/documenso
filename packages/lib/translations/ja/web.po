@@ -11091,6 +11091,10 @@ msgstr "この却下内容について、ドキュメントの所有者に通知
 msgid "The document owner has been notified of your decision. They may contact you with further instructions if necessary."
 msgstr "お客様の決定について、ドキュメントの所有者に通知しました。必要に応じて、追加の手順について連絡がある場合があります。"
 
+#: packages/email/template-components/template-document-rejected.tsx
+msgid "The document owner has been notified. You can view the document status from your Wize dashboard."
+msgstr ""
+
 #. placeholder {0}: data.delegatedOwnerName || data.delegatedOwnerEmail
 #. placeholder {1}: data.teamName
 #: packages/lib/utils/document-audit-logs.ts
@@ -12834,7 +12838,6 @@ msgstr "ドキュメントを表示"
 #: apps/remix/app/components/general/document-signing/document-signing-page-view-v1.tsx
 #: apps/remix/app/components/general/document-signing/document-signing-page-view-v2.tsx
 #: packages/email/template-components/template-document-invite.tsx
-#: packages/email/template-components/template-document-rejected.tsx
 #: packages/email/template-components/template-document-reminder.tsx
 #: packages/email/template-components/template-recipient-expired.tsx
 #: packages/ui/primitives/document-flow/add-subject.tsx
@@ -13785,10 +13788,6 @@ msgstr "このメールアドレスに紐づく文書を表示したり、この
 #: packages/email/templates/bulk-send-complete.tsx
 msgid "You can view the created documents in your dashboard under the \"Documents created from template\" section."
 msgstr "作成されたドキュメントは、ダッシュボードの「テンプレートから作成されたドキュメント」セクションで確認できます。"
-
-#: packages/email/template-components/template-document-rejected.tsx
-msgid "You can view the document and its status by clicking the button below."
-msgstr "下のボタンをクリックすると、ドキュメントとそのステータスを表示できます。"
 
 #: packages/lib/utils/document-audit-logs.ts
 msgid "You cancelled the document"
