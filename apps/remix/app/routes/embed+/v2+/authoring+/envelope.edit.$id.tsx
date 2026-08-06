@@ -1,5 +1,6 @@
 import { EnvelopeEditorProvider } from '@documenso/lib/client-only/providers/envelope-editor-provider';
 import type { SupportedLanguageCodes } from '@documenso/lib/constants/i18n';
+import { AppError } from '@documenso/lib/errors/app-error';
 import { verifyEmbeddingPresignToken } from '@documenso/lib/server-only/embedding-presign/verify-embedding-presign-token';
 import { getEditorEnvelopeById } from '@documenso/lib/server-only/envelope/get-editor-envelope-by-id';
 import { getTeamSettings } from '@documenso/lib/server-only/team/get-team-settings';
@@ -284,10 +285,12 @@ const EnvelopeEditPage = ({ embedAuthoringOptions }: EnvelopeEditPageProps) => {
     } catch (err) {
       console.error('Failed to update envelope:', err);
 
+      const error = AppError.parseError(err);
+
       toast({
         variant: 'destructive',
         title: t`Error`,
-        description: t`Failed to update envelope. Please try again.`,
+        description: error.message || t`Failed to update envelope. Please try again.`,
       });
     }
 

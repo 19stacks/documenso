@@ -85,6 +85,9 @@ export const ZEnvelopeEditorSettingsSchema = z.object({
   recipients: z
     .object({
       allowAIDetection: z.boolean(),
+      allowAddSigners: z.boolean(),
+      allowRemoveSigners: z.boolean(),
+      allowEditRecipients: z.boolean(),
       allowConfigureSigningOrder: z.boolean(),
       allowConfigureDictateNextSigner: z.boolean(),
       allowApproverRole: z.boolean(),
@@ -146,6 +149,9 @@ export const DEFAULT_EDITOR_CONFIG: EnvelopeEditorConfig = {
   },
   recipients: {
     allowAIDetection: true,
+    allowAddSigners: true,
+    allowRemoveSigners: true,
+    allowEditRecipients: true,
     allowConfigureSigningOrder: true,
     allowConfigureDictateNextSigner: true,
 
@@ -206,6 +212,9 @@ export const DEFAULT_EMBEDDED_EDITOR_CONFIG = {
   },
   recipients: {
     allowAIDetection: false, // These are not supported for embeds, and are directly excluded in the embedded repo.
+    allowAddSigners: true,
+    allowRemoveSigners: true,
+    allowEditRecipients: true,
     allowConfigureSigningOrder: true,
     allowConfigureDictateNextSigner: true,
     allowApproverRole: true,

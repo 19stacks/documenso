@@ -616,17 +616,19 @@ export const EnvelopeEditorRecipientForm = () => {
             </Button>
           )}
 
-          <Button
-            variant="outline"
-            type="button"
-            className="flex-1"
-            size="sm"
-            disabled={isSubmitting || signers.length >= remaining.recipients}
-            onClick={() => onAddSigner()}
-          >
-            <PlusIcon className="mr-1 -ml-1 h-5 w-5" />
-            <Trans>Add Signer</Trans>
-          </Button>
+          {editorConfig.recipients?.allowAddSigners !== false && (
+            <Button
+              variant="outline"
+              type="button"
+              className="flex-1"
+              size="sm"
+              disabled={isSubmitting || signers.length >= remaining.recipients}
+              onClick={() => onAddSigner()}
+            >
+              <PlusIcon className="mr-1 -ml-1 h-5 w-5" />
+              <Trans>Add Signer</Trans>
+            </Button>
+          )}
         </div>
       </CardHeader>
 
@@ -887,7 +889,8 @@ export const EnvelopeEditorRecipientForm = () => {
                                             snapshot.isDragging ||
                                             isSubmitting ||
                                             !canRecipientBeModified(signer.id) ||
-                                            isDirectRecipient
+                                            isDirectRecipient ||
+                                            editorConfig.recipients?.allowEditRecipients === false
                                           }
                                           options={recipientSuggestions}
                                           onSelect={(suggestion) =>
@@ -934,7 +937,8 @@ export const EnvelopeEditorRecipientForm = () => {
                                             snapshot.isDragging ||
                                             isSubmitting ||
                                             !canRecipientBeModified(signer.id) ||
-                                            isDirectRecipient
+                                            isDirectRecipient ||
+                                            editorConfig.recipients?.allowEditRecipients === false
                                           }
                                           options={recipientSuggestions}
                                           onSelect={(suggestion) =>
@@ -989,23 +993,25 @@ export const EnvelopeEditorRecipientForm = () => {
                                   )}
                                 />
 
-                                <Button
-                                  variant="ghost"
-                                  className={cn('mt-auto px-2', {
-                                    'mb-6': form.formState.errors.signers?.[index],
-                                  })}
-                                  data-testid="remove-signer-button"
-                                  disabled={
-                                    snapshot.isDragging ||
-                                    isSubmitting ||
-                                    !canRecipientBeModified(signer.id) ||
-                                    signers.length === 1 ||
-                                    isDirectRecipient
-                                  }
-                                  onClick={() => onRemoveSigner(index)}
-                                >
-                                  <TrashIcon className="h-4 w-4" />
-                                </Button>
+                                {(editorConfig.recipients?.allowRemoveSigners !== false || !signer.id) && (
+                                  <Button
+                                    variant="ghost"
+                                    className={cn('mt-auto px-2', {
+                                      'mb-6': form.formState.errors.signers?.[index],
+                                    })}
+                                    data-testid="remove-signer-button"
+                                    disabled={
+                                      snapshot.isDragging ||
+                                      isSubmitting ||
+                                      !canRecipientBeModified(signer.id) ||
+                                      signers.length === 1 ||
+                                      isDirectRecipient
+                                    }
+                                    onClick={() => onRemoveSigner(index)}
+                                  >
+                                    <TrashIcon className="h-4 w-4" />
+                                  </Button>
+                                )}
                               </div>
 
                               {showAdvancedSettings && organisation.organisationClaim.flags.cfr21 && (

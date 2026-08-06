@@ -359,14 +359,15 @@ export const updateEnvelope = async ({
     await recomputeNextReminderForEnvelope(envelope.id);
   }
 
-  if (envelope.type === EnvelopeType.TEMPLATE) {
-    await triggerWebhook({
-      event: WebhookTriggerEvents.TEMPLATE_UPDATED,
-      data: ZWebhookDocumentSchema.parse(mapEnvelopeToWebhookDocumentPayload(updatedEnvelope)),
-      userId,
-      teamId,
-    });
-  }
+  await triggerWebhook({
+    event:
+      envelope.type === EnvelopeType.TEMPLATE
+        ? WebhookTriggerEvents.TEMPLATE_UPDATED
+        : WebhookTriggerEvents.ENVELOPE_UPDATED,
+    data: ZWebhookDocumentSchema.parse(mapEnvelopeToWebhookDocumentPayload(updatedEnvelope)),
+    userId,
+    teamId,
+  });
 
   // deconstruct to remove the recipients and documentMeta from the returned object since they aren't needed and can be large.
   const { recipients: _recipients, documentMeta: _documentMeta, ...finalEnvelope } = updatedEnvelope;

@@ -109,6 +109,12 @@ export const buildEmbeddedFeatures = (features: DeepPartial<EnvelopeEditorConfig
         ? {
             allowAIDetection:
               features.recipients?.allowAIDetection ?? DEFAULT_EMBEDDED_EDITOR_CONFIG.recipients.allowAIDetection,
+            allowAddSigners:
+              features.recipients?.allowAddSigners ?? DEFAULT_EMBEDDED_EDITOR_CONFIG.recipients.allowAddSigners,
+            allowRemoveSigners:
+              features.recipients?.allowRemoveSigners ?? DEFAULT_EMBEDDED_EDITOR_CONFIG.recipients.allowRemoveSigners,
+            allowEditRecipients:
+              features.recipients?.allowEditRecipients ?? DEFAULT_EMBEDDED_EDITOR_CONFIG.recipients.allowEditRecipients,
             allowConfigureSigningOrder:
               features.recipients?.allowConfigureSigningOrder ??
               DEFAULT_EMBEDDED_EDITOR_CONFIG.recipients.allowConfigureSigningOrder,
