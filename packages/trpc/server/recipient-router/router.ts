@@ -593,7 +593,7 @@ export const recipientRouter = router({
         });
       }
 
-      await completeDocumentWithToken({
+      const result = await completeDocumentWithToken({
         token,
         id: {
           type: 'documentId',
@@ -606,7 +606,11 @@ export const recipientRouter = router({
         requestMetadata: ctx.metadata.requestMetadata,
       });
 
-      return { status: 'SIGNED' as const };
+      return {
+        status: 'SIGNED' as const,
+        dictatedNextSignerUnavailable: result.dictatedNextSignerUnavailable,
+        notifiedNextRecipient: result.notifiedNextRecipient,
+      };
     }),
 
   /**

@@ -32,7 +32,7 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import { DocumentSigningOrder, EnvelopeType, RecipientRole, SendStatus } from '@prisma/client';
 import { motion } from 'framer-motion';
 import { GripVerticalIcon, HelpCircleIcon, PlusIcon, SparklesIcon, TrashIcon } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFieldArray, useWatch } from 'react-hook-form';
 import { useRevalidator, useSearchParams } from 'react-router';
 import { isDeepEqual } from 'remeda';
@@ -40,6 +40,86 @@ import { isDeepEqual } from 'remeda';
 import { AiFeaturesEnableDialog } from '~/components/dialogs/ai-features-enable-dialog';
 import { AiRecipientDetectionDialog } from '~/components/dialogs/ai-recipient-detection-dialog';
 import { useCurrentTeam } from '~/providers/team';
+
+type SigningOrderInputProps = {
+  value: number | undefined;
+  index: number;
+  disabled?: boolean;
+  onCommit: (index: number, order: string) => void;
+  onRestore: (index: number) => void;
+};
+
+/**
+ * Local-state order input so clearing/rewriting digits is not blocked by RHF
+ * (undefined values) or list reordering while the user is still typing.
+ */
+const SigningOrderInput = ({
+  value,
+  index,
+  disabled,
+  onCommit,
+  onRestore,
+  ...props
+}: SigningOrderInputProps & ComponentPropsWithoutRef<'input'>) => {
+  const [text, setText] = useState(() => (value != null ? String(value) : ''));
+  const isFocusedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isFocusedRef.current) {
+      setText(value != null ? String(value) : '');
+    }
+  }, [value]);
+
+  return (
+    <Input
+      {...props}
+      type="text"
+      inputMode="numeric"
+      pattern="[0-9]*"
+      data-testid="signing-order-input"
+      className={cn(
+        'w-10 text-center',
+        '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
+        props.className,
+      )}
+      disabled={disabled}
+      value={text}
+      onFocus={(event) => {
+        isFocusedRef.current = true;
+        props.onFocus?.(event);
+      }}
+      onKeyDown={(event) => {
+        // Stop drag-and-drop / parent handlers from swallowing edit keys.
+        event.stopPropagation();
+        props.onKeyDown?.(event);
+      }}
+      onChange={(event) => {
+        event.stopPropagation();
+
+        const rawValue = event.target.value;
+
+        if (rawValue === '' || /^\d+$/.test(rawValue)) {
+          setText(rawValue);
+        }
+      }}
+      onBlur={(event) => {
+        isFocusedRef.current = false;
+
+        const trimmed = text.trim();
+        const parsedOrder = Number(trimmed);
+
+        if (!trimmed || !Number.isInteger(parsedOrder) || parsedOrder < 1) {
+          setText(value != null ? String(value) : String(index + 1));
+          onRestore(index);
+        } else {
+          onCommit(index, trimmed);
+        }
+
+        props.onBlur?.(event);
+      }}
+    />
+  );
+};
 
 export const EnvelopeEditorRecipientForm = () => {
   const { envelope, setRecipientsDebounced, updateEnvelope, editorRecipients, isEmbedded, editorConfig } =
@@ -161,15 +241,32 @@ export const EnvelopeEditorRecipientForm = () => {
       .map((signer, index) => ({ ...signer, signingOrder: index + 1 }));
   };
 
+  const getNextSigningOrder = (currentSigners: typeof watchedSigners) => {
+    if (currentSigners.length === 0) {
+      return 1;
+    }
+
+    return Math.max(...currentSigners.map((signer) => signer.signingOrder ?? 0)) + 1;
+  };
+
   const {
     append: appendSigner,
     fields: signers,
     remove: removeSigner,
+    replace: replaceSigners,
   } = useFieldArray({
     control,
     name: 'signers',
     keyName: 'nativeId',
   });
+
+  const updateSigners = useCallback(
+    (nextSigners: typeof watchedSigners) => {
+      // useFieldArray requires replace() to reorder rows — setValue alone won't move them.
+      replaceSigners(nextSigners);
+    },
+    [replaceSigners],
+  );
 
   const emptySignerIndex = watchedSigners.findIndex(
     (signer) =>
@@ -201,12 +298,15 @@ export const EnvelopeEditorRecipientForm = () => {
 
     const recipient = recipients.find((recipient) => recipient.id === recipientId);
 
+    // Not synced into envelope state yet — keep the row editable.
     if (!recipient) {
-      return false;
+      return true;
     }
 
     return utilCanRecipientBeModified(recipient, fields);
   };
+
+  const isNewSigner = (signerId?: number) => signerId === undefined || signerId < 0;
 
   const onAddSigner = () => {
     appendSigner({
@@ -215,20 +315,18 @@ export const EnvelopeEditorRecipientForm = () => {
       email: '',
       role: RecipientRole.SIGNER,
       actionAuth: [],
-      signingOrder: signers.length > 0 ? (signers[signers.length - 1]?.signingOrder ?? 0) + 1 : 1,
+      signingOrder: getNextSigningOrder(form.getValues('signers')),
     });
   };
 
   const onAiDetectionComplete = (detectedRecipients: TDetectedRecipientSchema[]) => {
     const currentSigners = form.getValues('signers');
 
-    let nextSigningOrder =
-      currentSigners.length > 0 ? Math.max(...currentSigners.map((s) => s.signingOrder ?? 0)) + 1 : 1;
+    let nextSigningOrder = getNextSigningOrder(currentSigners);
 
     // If the only signer is the default empty signer lets just replace it with the detected recipients
     if (currentSigners.length === 1 && !currentSigners[0].name && !currentSigners[0].email) {
-      form.setValue(
-        'signers',
+      updateSigners(
         detectedRecipients.map((recipient, index) => ({
           formId: nanoid(12),
           name: recipient.name,
@@ -237,10 +335,6 @@ export const EnvelopeEditorRecipientForm = () => {
           actionAuth: [],
           signingOrder: index + 1,
         })),
-        {
-          shouldValidate: true,
-          shouldDirty: true,
-        },
       );
 
       return;
@@ -267,10 +361,7 @@ export const EnvelopeEditorRecipientForm = () => {
       nextSigningOrder += 1;
     }
 
-    form.setValue('signers', normalizeSigningOrders(currentSigners), {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
+    updateSigners(normalizeSigningOrders(currentSigners));
 
     toast({
       title: plural(detectedRecipients.length, {
@@ -303,21 +394,16 @@ export const EnvelopeEditorRecipientForm = () => {
 
       const updatedSigners = form.getValues('signers').filter((s) => s.formId !== signer.formId);
 
-      form.setValue('signers', normalizeSigningOrders(updatedSigners), {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
+      updateSigners(normalizeSigningOrders(updatedSigners));
     }
   };
 
   const onAddSelfSigner = () => {
     if (emptySignerIndex !== -1) {
       setValue(`signers.${emptySignerIndex}.name`, currentEditorName ?? '', {
-        shouldValidate: true,
         shouldDirty: true,
       });
       setValue(`signers.${emptySignerIndex}.email`, currentEditorEmail ?? '', {
-        shouldValidate: true,
         shouldDirty: true,
       });
 
@@ -330,24 +416,20 @@ export const EnvelopeEditorRecipientForm = () => {
           email: currentEditorEmail ?? '',
           role: RecipientRole.SIGNER,
           actionAuth: [],
-          signingOrder: signers.length > 0 ? (signers[signers.length - 1]?.signingOrder ?? 0) + 1 : 1,
+          signingOrder: getNextSigningOrder(form.getValues('signers')),
         },
         {
           shouldFocus: true,
         },
       );
-
-      void form.trigger('signers');
     }
   };
 
   const handleRecipientAutoCompleteSelect = (index: number, suggestion: RecipientAutoCompleteOption) => {
     setValue(`signers.${index}.email`, suggestion.email, {
-      shouldValidate: true,
       shouldDirty: true,
     });
     setValue(`signers.${index}.name`, suggestion.name || '', {
-      shouldValidate: true,
       shouldDirty: true,
     });
   };
@@ -358,7 +440,7 @@ export const EnvelopeEditorRecipientForm = () => {
         return;
       }
 
-      const items = Array.from(watchedSigners);
+      const items = Array.from(form.getValues('signers'));
       const [reorderedSigner] = items.splice(result.source.index, 1);
 
       // Find next valid position
@@ -374,10 +456,7 @@ export const EnvelopeEditorRecipientForm = () => {
         signingOrder: !canRecipientBeModified(signer.id) ? signer.signingOrder : index + 1,
       }));
 
-      form.setValue('signers', updatedSigners, {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
+      updateSigners(updatedSigners);
 
       const lastSigner = updatedSigners[updatedSigners.length - 1];
       if (lastSigner.role === RecipientRole.ASSISTANT) {
@@ -386,10 +465,8 @@ export const EnvelopeEditorRecipientForm = () => {
           description: t`Having an assistant as the last signer means they will be unable to take any action as there are no subsequent signers to assist.`,
         });
       }
-
-      await form.trigger('signers');
     },
-    [form, canRecipientBeModified, watchedSigners, toast],
+    [form, canRecipientBeModified, updateSigners, toast],
   );
 
   const handleRoleChange = useCallback(
@@ -400,7 +477,6 @@ export const EnvelopeEditorRecipientForm = () => {
       // Handle parallel to sequential conversion for assistants
       if (role === RecipientRole.ASSISTANT && signingOrder === DocumentSigningOrder.PARALLEL) {
         form.setValue('signingOrder', DocumentSigningOrder.SEQUENTIAL, {
-          shouldValidate: true,
           shouldDirty: true,
         });
         toast({
@@ -417,10 +493,7 @@ export const EnvelopeEditorRecipientForm = () => {
         signingOrder: !canRecipientBeModified(signer.id) ? signer.signingOrder : idx + 1,
       }));
 
-      form.setValue('signers', updatedSigners, {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
+      updateSigners(updatedSigners);
 
       if (role === RecipientRole.ASSISTANT && index === updatedSigners.length - 1) {
         toast({
@@ -429,23 +502,32 @@ export const EnvelopeEditorRecipientForm = () => {
         });
       }
     },
-    [form, toast, canRecipientBeModified],
+    [form, toast, canRecipientBeModified, updateSigners],
   );
 
   const handleSigningOrderChange = useCallback(
     (index: number, newOrderString: string) => {
       const trimmedOrderString = newOrderString.trim();
       if (!trimmedOrderString) {
-        return;
+        return false;
       }
 
       const newOrder = Number(trimmedOrderString);
       if (!Number.isInteger(newOrder) || newOrder < 1) {
-        return;
+        return false;
       }
 
       const currentSigners = form.getValues('signers');
       const signer = currentSigners[index];
+
+      if (!signer) {
+        return false;
+      }
+
+      // Already at the requested order — nothing to move.
+      if (signer.signingOrder === newOrder) {
+        return true;
+      }
 
       // Remove signer from current position and insert at new position
       const remainingSigners = currentSigners.filter((_, idx) => idx !== index);
@@ -457,10 +539,7 @@ export const EnvelopeEditorRecipientForm = () => {
         signingOrder: !canRecipientBeModified(s.id) ? s.signingOrder : idx + 1,
       }));
 
-      form.setValue('signers', updatedSigners, {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
+      updateSigners(updatedSigners);
 
       if (signer.role === RecipientRole.ASSISTANT && newPosition === remainingSigners.length - 1) {
         toast({
@@ -468,8 +547,10 @@ export const EnvelopeEditorRecipientForm = () => {
           description: t`Having an assistant as the last signer means they will be unable to take any action as there are no subsequent signers to assist.`,
         });
       }
+
+      return true;
     },
-    [form, canRecipientBeModified, toast],
+    [form, canRecipientBeModified, toast, updateSigners],
   );
 
   const handleSigningOrderDisable = useCallback(() => {
@@ -481,21 +562,14 @@ export const EnvelopeEditorRecipientForm = () => {
       role: signer.role === RecipientRole.ASSISTANT ? RecipientRole.SIGNER : signer.role,
     }));
 
-    form.setValue('signers', updatedSigners, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
+    updateSigners(updatedSigners);
     form.setValue('signingOrder', DocumentSigningOrder.PARALLEL, {
-      shouldValidate: true,
       shouldDirty: true,
     });
     form.setValue('allowDictateNextSigner', false, {
-      shouldValidate: true,
       shouldDirty: true,
     });
-
-    void form.trigger();
-  }, [form]);
+  }, [form, updateSigners]);
 
   // Dupecode/Inefficient: Done because native isValid won't work for our usecase.
   useEffect(() => {
@@ -690,7 +764,6 @@ export const EnvelopeEditorRecipientForm = () => {
                           // If sequential signing is turned off, disable dictate next signer
                           if (!checked) {
                             form.setValue('allowDictateNextSigner', false, {
-                              shouldValidate: true,
                               shouldDirty: true,
                             });
                           }
@@ -792,7 +865,7 @@ export const EnvelopeEditorRecipientForm = () => {
 
                     return (
                       <Draggable
-                        key={`${signer.nativeId}-${signer.signingOrder}`}
+                        key={signer.nativeId}
                         draggableId={signer['nativeId']}
                         index={index}
                         isDragDisabled={
@@ -806,7 +879,6 @@ export const EnvelopeEditorRecipientForm = () => {
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            {...provided.dragHandleProps}
                             className={cn('py-1', {
                               'pointer-events-none rounded-md bg-widget-foreground pt-2': snapshot.isDragging,
                             })}
@@ -833,28 +905,34 @@ export const EnvelopeEditorRecipientForm = () => {
                                             !form.formState.errors.signers[index]?.signingOrder,
                                         })}
                                       >
-                                        <GripVerticalIcon className="h-5 w-5 flex-shrink-0 opacity-40" />
+                                        <button
+                                          type="button"
+                                          className="flex cursor-grab items-center active:cursor-grabbing"
+                                          {...provided.dragHandleProps}
+                                        >
+                                          <GripVerticalIcon className="h-5 w-5 flex-shrink-0 opacity-40" />
+                                        </button>
                                         <FormControl>
-                                          <Input
-                                            type="number"
-                                            max={signers.length}
-                                            data-testid="signing-order-input"
-                                            className={cn(
-                                              'w-10 text-center',
-                                              '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
-                                            )}
-                                            {...field}
-                                            onChange={(e) => {
-                                              field.onChange(e);
-                                              handleSigningOrderChange(index, e.target.value);
-                                            }}
-                                            onBlur={(e) => {
-                                              field.onBlur();
-                                              handleSigningOrderChange(index, e.target.value);
-                                            }}
+                                          <SigningOrderInput
+                                            value={field.value}
+                                            index={index}
                                             disabled={
                                               snapshot.isDragging || isSubmitting || !canRecipientBeModified(signer.id)
                                             }
+                                            onCommit={(signerIndex, order) => {
+                                              handleSigningOrderChange(signerIndex, order);
+                                            }}
+                                            onRestore={(signerIndex) => {
+                                              const restoredSigners = form.getValues('signers').map((s, idx) => ({
+                                                ...s,
+                                                signingOrder: !canRecipientBeModified(s.id) ? s.signingOrder : idx + 1,
+                                              }));
+                                              updateSigners(restoredSigners);
+                                              // Keep RHF field in sync with restored row order.
+                                              field.onChange(
+                                                restoredSigners[signerIndex]?.signingOrder ?? signerIndex + 1,
+                                              );
+                                            }}
                                           />
                                         </FormControl>
                                         <FormMessage />
@@ -890,7 +968,8 @@ export const EnvelopeEditorRecipientForm = () => {
                                             isSubmitting ||
                                             !canRecipientBeModified(signer.id) ||
                                             isDirectRecipient ||
-                                            editorConfig.recipients?.allowEditRecipients === false
+                                            (editorConfig.recipients?.allowEditRecipients === false &&
+                                              !isNewSigner(signer.id))
                                           }
                                           options={recipientSuggestions}
                                           onSelect={(suggestion) =>
@@ -901,7 +980,6 @@ export const EnvelopeEditorRecipientForm = () => {
                                             setRecipientSearchQuery(query);
                                           }}
                                           loading={isLoading}
-                                          data-testid="signer-email-input"
                                           maxLength={254}
                                         />
                                       </FormControl>
@@ -938,7 +1016,8 @@ export const EnvelopeEditorRecipientForm = () => {
                                             isSubmitting ||
                                             !canRecipientBeModified(signer.id) ||
                                             isDirectRecipient ||
-                                            editorConfig.recipients?.allowEditRecipients === false
+                                            (editorConfig.recipients?.allowEditRecipients === false &&
+                                              !isNewSigner(signer.id))
                                           }
                                           options={recipientSuggestions}
                                           onSelect={(suggestion) =>
@@ -993,7 +1072,7 @@ export const EnvelopeEditorRecipientForm = () => {
                                   )}
                                 />
 
-                                {(editorConfig.recipients?.allowRemoveSigners !== false || !signer.id) && (
+                                {(editorConfig.recipients?.allowRemoveSigners !== false || isNewSigner(signer.id)) && (
                                   <Button
                                     variant="ghost"
                                     className={cn('mt-auto px-2', {

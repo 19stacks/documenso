@@ -6,7 +6,9 @@ import { DocumentSigningOrder, DocumentStatus, FieldType, RecipientRole, Signing
 
 import { signDirectSignaturePad, signSignaturePad } from '../fixtures/signature';
 
-test('[NEXT_RECIPIENT_DICTATION]: should allow updating next recipient when dictation is enabled', async ({ page }) => {
+test('[NEXT_RECIPIENT_DICTATION]: should allow selecting next recipient from pending list when dictation is enabled', async ({
+  page,
+}) => {
   const { user, team } = await seedUser();
   const { user: firstSigner } = await seedUser();
   const { user: secondSigner } = await seedUser();
@@ -34,6 +36,8 @@ test('[NEXT_RECIPIENT_DICTATION]: should allow updating next recipient when dict
   });
 
   const firstRecipient = recipients[0];
+  const secondRecipient = recipients[1];
+  const thirdRecipient = recipients[2];
   const { token, fields } = firstRecipient;
 
   const signUrl = `/sign/${token}`;
@@ -55,17 +59,26 @@ test('[NEXT_RECIPIENT_DICTATION]: should allow updating next recipient when dict
     await expect(page.locator(`#field-${field.id}`)).toHaveAttribute('data-inserted', 'true');
   }
 
-  // Complete signing and update next recipient
+  // Complete signing and select a different pending recipient as next
   await page.getByRole('button', { name: 'Complete' }).click();
 
-  // Verify next recipient info is shown
-  await expect(page.getByRole('dialog')).toBeVisible();
-  await expect(page.getByText('Next Recipient Name')).toBeVisible();
-
-  // Use dialog context to ensure we're targeting the correct form fields
+  // Verify next recipient dictation UI is shown
   const dialog = page.getByRole('dialog');
-  await dialog.getByLabel('Name').fill('New Recipient');
-  await dialog.getByLabel('Email').fill('new.recipient@example.com');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText('Next Recipient')).toBeVisible();
+  await expect(dialog.getByText('Next Recipient Name')).toBeVisible();
+  await expect(dialog.getByText('Next Recipient Email')).toBeVisible();
+
+  // Default selection should be the immediate next recipient (second signer)
+  await expect(dialog.getByText(secondRecipient.name, { exact: false }).first()).toBeVisible();
+  await expect(dialog.getByText(secondRecipient.email)).toBeVisible();
+
+  // Select the third pending recipient as next signer
+  await dialog.getByRole('combobox').click();
+  await page.getByRole('option', { name: new RegExp(thirdRecipient.email) }).click();
+
+  await expect(dialog.getByText(thirdRecipient.name, { exact: false }).first()).toBeVisible();
+  await expect(dialog.getByText(thirdRecipient.email)).toBeVisible();
 
   // Submit and verify completion
   await page.getByRole('button', { name: 'Sign' }).click();
@@ -85,15 +98,20 @@ test('[NEXT_RECIPIENT_DICTATION]: should allow updating next recipient when dict
   expect(updatedDocument.status).toBe(DocumentStatus.PENDING);
 
   // First recipient should be completed
-  const updatedFirstRecipient = updatedDocument.recipients[0];
-  expect(updatedFirstRecipient.signingStatus).toBe(SigningStatus.SIGNED);
+  const updatedFirstRecipient = updatedDocument.recipients.find((r) => r.id === firstRecipient.id);
+  expect(updatedFirstRecipient?.signingStatus).toBe(SigningStatus.SIGNED);
 
-  // Second recipient should be the new recipient
-  const updatedSecondRecipient = updatedDocument.recipients[1];
-  expect(updatedSecondRecipient.name).toBe('New Recipient');
-  expect(updatedSecondRecipient.email).toBe('new.recipient@example.com');
-  expect(updatedSecondRecipient.signingOrder).toBe(2);
-  expect(updatedSecondRecipient.signingStatus).toBe(SigningStatus.NOT_SIGNED);
+  // Third recipient should now be next (signing order 2)
+  const updatedThirdRecipient = updatedDocument.recipients.find((r) => r.id === thirdRecipient.id);
+  expect(updatedThirdRecipient?.email).toBe(thirdSigner.email);
+  expect(updatedThirdRecipient?.signingOrder).toBe(2);
+  expect(updatedThirdRecipient?.signingStatus).toBe(SigningStatus.NOT_SIGNED);
+
+  // Second recipient should be moved to order 3
+  const updatedSecondRecipient = updatedDocument.recipients.find((r) => r.id === secondRecipient.id);
+  expect(updatedSecondRecipient?.email).toBe(secondSigner.email);
+  expect(updatedSecondRecipient?.signingOrder).toBe(3);
+  expect(updatedSecondRecipient?.signingStatus).toBe(SigningStatus.NOT_SIGNED);
 });
 
 test('[NEXT_RECIPIENT_DICTATION]: should not show dictation UI when disabled', async ({ page }) => {
@@ -148,8 +166,9 @@ test('[NEXT_RECIPIENT_DICTATION]: should not show dictation UI when disabled', a
   await page.getByRole('button', { name: 'Complete' }).click();
 
   // Verify next recipient UI is not shown
-  await expect(page.getByText('The next recipient to sign this document will be')).not.toBeVisible();
-  await expect(page.getByRole('button', { name: 'Update Recipient' })).not.toBeVisible();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByText('Next Recipient', { exact: true })).not.toBeVisible();
+  await expect(dialog.getByRole('combobox')).not.toBeVisible();
 
   // Submit and verify completion
   await page.getByRole('button', { name: 'Sign' }).click();
@@ -232,8 +251,9 @@ test('[NEXT_RECIPIENT_DICTATION]: should work with parallel signing flow', async
     await page.getByRole('button', { name: 'Complete' }).click();
 
     // Verify next recipient UI is not shown in parallel flow
-    await expect(page.getByText('The next recipient to sign this document will be')).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Update Recipient' })).not.toBeVisible();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByText('Next Recipient', { exact: true })).not.toBeVisible();
+    await expect(dialog.getByRole('combobox')).not.toBeVisible();
 
     // Submit and verify completion
     await page.getByRole('button', { name: 'Sign' }).click();
@@ -261,7 +281,7 @@ test('[NEXT_RECIPIENT_DICTATION]: should work with parallel signing flow', async
   }).toPass();
 });
 
-test('[NEXT_RECIPIENT_DICTATION]: should allow assistant to dictate next signer', async ({ page }) => {
+test('[NEXT_RECIPIENT_DICTATION]: should allow assistant to select next signer from pending list', async ({ page }) => {
   const { user, team } = await seedUser();
   const { user: assistant } = await seedUser();
   const { user: signer } = await seedUser();
@@ -287,6 +307,8 @@ test('[NEXT_RECIPIENT_DICTATION]: should allow assistant to dictate next signer'
   });
 
   const assistantRecipient = recipients[0];
+  const secondRecipient = recipients[1];
+  const thirdRecipient = recipients[2];
   const { token, fields } = assistantRecipient;
 
   const signUrl = `/sign/${token}`;
@@ -315,21 +337,20 @@ test('[NEXT_RECIPIENT_DICTATION]: should allow assistant to dictate next signer'
     await expect(page.locator(`#field-${field.id}`)).toHaveAttribute('data-inserted', 'true');
   }
 
-  // Complete assisting and update next recipient
+  // Complete assisting and select next recipient
   await page.getByRole('button', { name: 'Continue' }).click();
 
-  // Verify next recipient info is shown
-  await expect(page.getByRole('dialog')).toBeVisible();
-  await expect(page.getByText('The next recipient to sign this document will be')).toBeVisible();
-
-  // Update next recipient
-  await page.locator('button').filter({ hasText: 'Update Recipient' }).click();
-  await page.waitForTimeout(1000);
-
-  // Use dialog context to ensure we're targeting the correct form fields
+  // Verify next recipient dropdown is shown
   const dialog = page.getByRole('dialog');
-  await dialog.getByLabel('Name').fill('New Recipient');
-  await dialog.getByLabel('Email').fill('new.recipient@example.com');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText('Next Recipient')).toBeVisible();
+
+  // Select the third pending recipient as next signer
+  await dialog.getByRole('combobox').click();
+  await page.getByRole('option', { name: new RegExp(thirdRecipient.email) }).click();
+
+  await expect(dialog.getByText(thirdRecipient.name, { exact: false }).first()).toBeVisible();
+  await expect(dialog.getByText(thirdRecipient.email)).toBeVisible();
 
   // Submit and verify completion
   await page.getByRole('button', { name: /Continue|Proceed/i }).click();
@@ -350,23 +371,22 @@ test('[NEXT_RECIPIENT_DICTATION]: should allow assistant to dictate next signer'
     expect(updatedDocument.status).toBe(DocumentStatus.PENDING);
 
     // Assistant should be completed
-    const updatedAssistant = updatedDocument.recipients[0];
-    expect(updatedAssistant.signingStatus).toBe(SigningStatus.SIGNED);
-    expect(updatedAssistant.role).toBe(RecipientRole.ASSISTANT);
+    const updatedAssistant = updatedDocument.recipients.find((r) => r.id === assistantRecipient.id);
+    expect(updatedAssistant?.signingStatus).toBe(SigningStatus.SIGNED);
+    expect(updatedAssistant?.role).toBe(RecipientRole.ASSISTANT);
 
-    // Second recipient should be the new signer
-    const updatedSigner = updatedDocument.recipients[1];
-    expect(updatedSigner.name).toBe('New Recipient');
-    expect(updatedSigner.email).toBe('new.recipient@example.com');
-    expect(updatedSigner.signingOrder).toBe(2);
-    expect(updatedSigner.signingStatus).toBe(SigningStatus.NOT_SIGNED);
-    expect(updatedSigner.role).toBe(RecipientRole.SIGNER);
+    // Third recipient should now be next (signing order 2)
+    const updatedThirdRecipient = updatedDocument.recipients.find((r) => r.id === thirdRecipient.id);
+    expect(updatedThirdRecipient?.email).toBe(thirdSigner.email);
+    expect(updatedThirdRecipient?.signingOrder).toBe(2);
+    expect(updatedThirdRecipient?.signingStatus).toBe(SigningStatus.NOT_SIGNED);
+    expect(updatedThirdRecipient?.role).toBe(RecipientRole.SIGNER);
 
-    // Third recipient should remain unchanged
-    const thirdRecipient = updatedDocument.recipients[2];
-    expect(thirdRecipient.email).toBe(thirdSigner.email);
-    expect(thirdRecipient.signingOrder).toBe(3);
-    expect(thirdRecipient.signingStatus).toBe(SigningStatus.NOT_SIGNED);
-    expect(thirdRecipient.role).toBe(RecipientRole.SIGNER);
+    // Second recipient should be moved to order 3
+    const updatedSecondRecipient = updatedDocument.recipients.find((r) => r.id === secondRecipient.id);
+    expect(updatedSecondRecipient?.email).toBe(signer.email);
+    expect(updatedSecondRecipient?.signingOrder).toBe(3);
+    expect(updatedSecondRecipient?.signingStatus).toBe(SigningStatus.NOT_SIGNED);
+    expect(updatedSecondRecipient?.role).toBe(RecipientRole.SIGNER);
   }).toPass();
 });

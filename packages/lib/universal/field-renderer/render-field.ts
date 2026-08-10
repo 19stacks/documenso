@@ -30,6 +30,7 @@ type RenderFieldOptions = {
   scale: number;
   editable?: boolean;
   fieldCanvasStyleCache?: FieldCanvasStyleCache;
+  recipientName?: string;
 };
 
 export const renderField = ({
@@ -43,6 +44,7 @@ export const renderField = ({
   editable,
   color,
   fieldCanvasStyleCache,
+  recipientName,
 }: RenderFieldOptions) => {
   const options = {
     pageLayer,
@@ -54,6 +56,7 @@ export const renderField = ({
     editable,
     scale,
     fieldCanvasStyle: resolveFieldCanvasStyle(field, mode, fieldCanvasStyleCache),
+    recipientName,
   };
 
   // If the generic text field element array changes, update the `GenericTextFieldTypeMetas` type

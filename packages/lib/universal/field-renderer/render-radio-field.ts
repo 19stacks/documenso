@@ -9,6 +9,7 @@ import {
   konvaTextFontFamily,
   upsertFieldGroup,
   upsertFieldRect,
+  upsertRecipientNameLabel,
 } from './field-generic-items';
 import type { FieldToRender, RenderFieldElementOptions } from './field-renderer';
 import { calculateFieldPosition, calculateMultiItemPosition } from './field-renderer';
@@ -192,6 +193,11 @@ export const renderRadioFieldElement = (field: FieldToRender, options: RenderFie
 
   if (color !== 'readOnly' && mode !== 'export') {
     createFieldHoverInteraction({ fieldGroup, fieldRect, options });
+  }
+
+  const recipientNameLabel = upsertRecipientNameLabel(field, options);
+  if (recipientNameLabel) {
+    fieldGroup.add(recipientNameLabel);
   }
 
   return {

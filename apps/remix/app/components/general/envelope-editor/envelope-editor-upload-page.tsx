@@ -49,6 +49,7 @@ export const EnvelopeEditorUploadPage = () => {
     envelope,
     setLocalEnvelope,
     editorFields,
+    editorRecipients,
     editorConfig,
     isEmbedded,
     navigateToStep,
@@ -132,6 +133,16 @@ export const EnvelopeEditorUploadPage = () => {
     () => getEnvelopeItemPermissions(envelope, envelope.recipients),
     [envelope, envelope.recipients],
   );
+
+  const onAddFieldsClick = async () => {
+    const isValid = await editorRecipients.form.trigger();
+
+    if (!isValid) {
+      return;
+    }
+
+    void navigateToStep('addFields');
+  };
 
   const { mutateAsync: replaceEnvelopeItemPdf } = trpc.envelope.item.replacePdf.useMutation({
     onSuccess: ({ data, fields }) => {
@@ -625,12 +636,20 @@ export const EnvelopeEditorUploadPage = () => {
         </CardContent>
       </Card>
 
+      {editorConfig.general.allowAddFieldsStep && isEmbedded && (
+        <div className="flex justify-end">
+          <Button type="button" onClick={() => void onAddFieldsClick()}>
+            <Trans>Add Signature Fields</Trans>
+          </Button>
+        </div>
+      )}
+
       {/* Recipients Section */}
       <EnvelopeEditorRecipientForm />
 
-      {editorConfig.general.allowAddFieldsStep && (
+      {editorConfig.general.allowAddFieldsStep && !isEmbedded && (
         <div className="flex justify-end">
-          <Button type="button" onClick={() => void navigateToStep('addFields')}>
+          <Button type="button" onClick={() => void onAddFieldsClick()}>
             <Trans>Add Fields</Trans>
           </Button>
         </div>

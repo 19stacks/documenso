@@ -5,6 +5,7 @@ import { isBase64Image } from '@documenso/lib/constants/signatures';
 import { AppError, AppErrorCode } from '@documenso/lib/errors/app-error';
 import type { TRecipientAccessAuth } from '@documenso/lib/types/document-auth';
 import { mapSecondaryIdToDocumentId } from '@documenso/lib/utils/envelope';
+import { getPendingRecipientsForDictation } from '@documenso/lib/utils/recipients';
 import { trpc } from '@documenso/trpc/react';
 import { useToast } from '@documenso/ui/primitives/use-toast';
 import { useLingui } from '@lingui/react/macro';
@@ -104,6 +105,19 @@ export const EnvelopeSignerCompleteDialog = () => {
       if (result.status === 'REDIRECT') {
         window.location.href = result.redirectUrl;
         return;
+      }
+
+      if (result.dictatedNextSignerUnavailable) {
+        const unavailableEmail = result.dictatedNextSignerUnavailable.email;
+        const fallbackEmail = result.notifiedNextRecipient?.email;
+
+        toast({
+          title: t`Selected recipient is no longer available`,
+          description: fallbackEmail
+            ? t`${unavailableEmail} is no longer a recipient on this envelope. The next available recipient (${fallbackEmail}) has been notified instead.`
+            : t`${unavailableEmail} is no longer a recipient on this envelope.`,
+          variant: 'destructive',
+        });
       }
 
       analytics.capture('App: Recipient has completed signing', {
@@ -244,6 +258,11 @@ export const EnvelopeSignerCompleteDialog = () => {
     };
   }, [email, fullName, isDirectTemplate, recipient.email, recipient.name, recipient.fields]);
 
+  const pendingRecipients = useMemo(
+    () => getPendingRecipientsForDictation(envelope.recipients, recipient.id),
+    [envelope.recipients, recipient.id],
+  );
+
   return (
     <DocumentSigningCompleteDialog
       isSubmitting={isPending}
@@ -254,6 +273,7 @@ export const EnvelopeSignerCompleteDialog = () => {
       fieldsValidated={handleOnNextFieldClick}
       recipient={recipient}
       allowDictateNextSigner={Boolean(nextRecipient && envelope.documentMeta.allowDictateNextSigner)}
+      pendingRecipients={pendingRecipients}
       disableNameInput={!isDirectTemplate && recipient.name !== ''}
       defaultNextSigner={nextRecipient ? { name: nextRecipient.name, email: nextRecipient.email } : undefined}
       buttonSize="sm"

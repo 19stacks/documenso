@@ -39,6 +39,17 @@ export type UpdateEnvelopeOptions = {
   };
   meta?: Partial<Omit<DocumentMeta, 'id'>>;
   requestMetadata: ApiRequestMetadata;
+  /**
+   * Whether to trigger the updated webhook for the envelope.
+   *
+   * Callers that update the envelope recipients/fields AFTER this function
+   * (e.g. the embedded authoring routes) should set this to `false` and
+   * trigger the webhook manually once all changes are persisted, so the
+   * webhook payload reflects the final state.
+   *
+   * @default true
+   */
+  triggerWebhook?: boolean;
 };
 
 export const updateEnvelope = async ({
@@ -48,6 +59,7 @@ export const updateEnvelope = async ({
   data = {},
   meta = {},
   requestMetadata,
+  triggerWebhook: shouldTriggerWebhook = true,
 }: UpdateEnvelopeOptions) => {
   const { envelopeWhereInput, team } = await getEnvelopeWhereInput({
     id,
@@ -359,15 +371,17 @@ export const updateEnvelope = async ({
     await recomputeNextReminderForEnvelope(envelope.id);
   }
 
-  await triggerWebhook({
-    event:
-      envelope.type === EnvelopeType.TEMPLATE
-        ? WebhookTriggerEvents.TEMPLATE_UPDATED
-        : WebhookTriggerEvents.ENVELOPE_UPDATED,
-    data: ZWebhookDocumentSchema.parse(mapEnvelopeToWebhookDocumentPayload(updatedEnvelope)),
-    userId,
-    teamId,
-  });
+  if (shouldTriggerWebhook) {
+    await triggerWebhook({
+      event:
+        envelope.type === EnvelopeType.TEMPLATE
+          ? WebhookTriggerEvents.TEMPLATE_UPDATED
+          : WebhookTriggerEvents.ENVELOPE_UPDATED,
+      data: ZWebhookDocumentSchema.parse(mapEnvelopeToWebhookDocumentPayload(updatedEnvelope)),
+      userId,
+      teamId,
+    });
+  }
 
   // deconstruct to remove the recipients and documentMeta from the returned object since they aren't needed and can be large.
   const { recipients: _recipients, documentMeta: _documentMeta, ...finalEnvelope } = updatedEnvelope;

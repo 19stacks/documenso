@@ -5,7 +5,12 @@ import { AppError } from '../../errors/app-error';
 import type { TSignatureFieldMeta } from '../../types/field-meta';
 import { resolveFieldOverflowMode } from '../../types/field-meta';
 import { calculateOverflowLayout } from './calculate-overflow-layout';
-import { createFieldHoverInteraction, upsertFieldGroup, upsertFieldRect } from './field-generic-items';
+import {
+  createFieldHoverInteraction,
+  upsertFieldGroup,
+  upsertFieldRect,
+  upsertRecipientNameLabel,
+} from './field-generic-items';
 import type { FieldToRender, RenderFieldElementOptions } from './field-renderer';
 import { calculateFieldPosition } from './field-renderer';
 
@@ -240,6 +245,11 @@ export const renderSignatureFieldElement = (field: FieldToRender, options: Rende
 
   fieldGroup.add(fieldRect);
   fieldGroup.add(fieldSignature);
+
+  const recipientNameLabel = upsertRecipientNameLabel(field, options);
+  if (recipientNameLabel) {
+    fieldGroup.add(recipientNameLabel);
+  }
 
   fieldGroup.on('transform', () => {
     const groupScaleX = fieldGroup.scaleX();

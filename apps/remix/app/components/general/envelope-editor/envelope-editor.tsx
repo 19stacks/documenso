@@ -56,11 +56,21 @@ const UPLOAD_STEP = {
   description: msg`Upload documents and add recipients`,
 };
 
+const EMBEDDED_UPLOAD_STEP = {
+  ...UPLOAD_STEP,
+  icon: ArrowLeftIcon,
+};
+
 const ADD_FIELDS_STEP = {
   id: 'addFields',
   title: msg`Add Fields`,
   icon: MousePointerIcon,
   description: msg`Place and configure form fields in the document`,
+};
+
+const EMBEDDED_ADD_FIELDS_STEP = {
+  ...ADD_FIELDS_STEP,
+  title: msg`Add Signature Fields`,
 };
 
 const PREVIEW_STEP = {
@@ -80,11 +90,13 @@ export const EnvelopeEditor = () => {
     editorConfig,
     isDocument,
     isTemplate,
+    isEmbedded,
     relativePath,
     navigateToStep,
     syncEnvelope,
     flushAutosave,
     resetForms,
+    editorRecipients,
   } = useCurrentEnvelopeEditor();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -105,11 +117,11 @@ export const EnvelopeEditor = () => {
     const steps: EnvelopeEditorStepData[] = [];
 
     if (allowUploadAndRecipientStep) {
-      steps.push(UPLOAD_STEP);
+      steps.push(isEmbedded ? EMBEDDED_UPLOAD_STEP : UPLOAD_STEP);
     }
 
     if (allowAddFieldsStep) {
-      steps.push(ADD_FIELDS_STEP);
+      steps.push(isEmbedded ? EMBEDDED_ADD_FIELDS_STEP : ADD_FIELDS_STEP);
     }
 
     if (allowPreviewStep) {
@@ -120,7 +132,7 @@ export const EnvelopeEditor = () => {
       ...step,
       order: index + 1,
     }));
-  }, [editorConfig]);
+  }, [editorConfig, isEmbedded]);
 
   const searchParamsStep = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -145,6 +157,14 @@ export const EnvelopeEditor = () => {
   const latestStepChangeTime = useRef(0);
 
   const handleStepChange = async (step: EnvelopeEditorStep) => {
+    if (searchParamsStep === 'upload' && step !== 'upload') {
+      const isValid = await editorRecipients.form.trigger();
+
+      if (!isValid) {
+        return;
+      }
+    }
+
     setPageToRender('loading');
 
     const currentTime = Date.now();

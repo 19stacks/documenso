@@ -1,22 +1,30 @@
 import { DOCUMENT_AUDIT_LOG_TYPE } from '@documenso/lib/types/document-audit-logs';
 import type { ApiRequestMetadata } from '@documenso/lib/universal/extract-request-metadata';
 import { prisma } from '@documenso/prisma';
-import { EnvelopeType, RecipientRole, SendStatus } from '@prisma/client';
+import {
+  DocumentSigningOrder,
+  DocumentStatus,
+  EnvelopeType,
+  RecipientRole,
+  SendStatus,
+  SigningStatus,
+} from '@prisma/client';
 
 import { AppError, AppErrorCode } from '../../errors/app-error';
 import { jobs } from '../../jobs/client';
 import { extractDerivedDocumentEmailSettings } from '../../types/document-email';
 import { createDocumentAuditLogData } from '../../utils/document-audit-logs';
+import { mapSecondaryIdToDocumentId } from '../../utils/envelope';
 import { canRecipientBeModified, isRecipientEmailValidForSending } from '../../utils/recipients';
 import { assertEnvelopeMutable } from '../envelope/assert-envelope-mutable';
 import { getEnvelopeWhereInput } from '../envelope/get-envelope-by-id';
 
-export interface DeleteEnvelopeRecipientOptions {
+export type DeleteEnvelopeRecipientOptions = {
   userId: number;
   teamId: number;
   recipientId: number;
   requestMetadata: ApiRequestMetadata;
-}
+};
 
 export const deleteEnvelopeRecipient = async ({
   userId,
@@ -150,6 +158,61 @@ export const deleteEnvelopeRecipient = async ({
         inviterName: envelope.team?.name || user.name || undefined,
       },
     });
+  }
+
+  // If this was a sequential document and the deleted recipient was next (or ahead),
+  // notify the new next pending recipient whose turn it now is.
+  if (
+    envelope.type === EnvelopeType.DOCUMENT &&
+    envelope.status === DocumentStatus.PENDING &&
+    envelope.documentMeta?.signingOrder === DocumentSigningOrder.SEQUENTIAL
+  ) {
+    const remainingRecipients = await prisma.recipient.findMany({
+      where: {
+        envelopeId: envelope.id,
+        role: {
+          not: RecipientRole.CC,
+        },
+      },
+      orderBy: [{ signingOrder: { sort: 'asc', nulls: 'last' } }, { id: 'asc' }],
+    });
+
+    const nextRecipient = remainingRecipients.find((recipient) => recipient.signingStatus !== SigningStatus.SIGNED);
+
+    const isNextRecipientsTurn =
+      Boolean(nextRecipient) &&
+      remainingRecipients
+        .filter((recipient) => {
+          if (!nextRecipient || recipient.id === nextRecipient.id) {
+            return false;
+          }
+
+          const nextOrder = nextRecipient.signingOrder ?? Number.MAX_SAFE_INTEGER;
+          const recipientOrder = recipient.signingOrder ?? Number.MAX_SAFE_INTEGER;
+
+          return recipientOrder < nextOrder;
+        })
+        .every((recipient) => recipient.signingStatus === SigningStatus.SIGNED);
+
+    if (nextRecipient && isNextRecipientsTurn && nextRecipient.sendStatus !== SendStatus.SENT) {
+      await prisma.recipient.update({
+        where: { id: nextRecipient.id },
+        data: {
+          sendStatus: SendStatus.SENT,
+          sentAt: new Date(),
+        },
+      });
+
+      await jobs.triggerJob({
+        name: 'send.signing.requested.email',
+        payload: {
+          userId: envelope.userId,
+          documentId: mapSecondaryIdToDocumentId(envelope.secondaryId),
+          recipientId: nextRecipient.id,
+          requestMetadata: requestMetadata.requestMetadata,
+        },
+      });
+    }
   }
 
   return deletedRecipient;

@@ -11,6 +11,7 @@ import {
 import type { TTemplate } from '@documenso/lib/types/template';
 import { isFieldUnsignedAndRequired } from '@documenso/lib/utils/advanced-fields-helpers';
 import { sortFieldsByPosition, validateFieldsInserted } from '@documenso/lib/utils/fields';
+import { getPendingRecipientsForDictation } from '@documenso/lib/utils/recipients';
 import type {
   TRemovedSignedFieldWithTokenMutationSchema,
   TSignFieldWithTokenMutationSchema,
@@ -246,6 +247,11 @@ export const DirectTemplateSigningForm = ({
       : undefined;
   }, [template.templateMeta?.signingOrder, template.recipients, directRecipient.id]);
 
+  const pendingRecipients = useMemo(
+    () => getPendingRecipientsForDictation(template.recipients, directRecipient.id),
+    [template.recipients, directRecipient.id],
+  );
+
   return (
     <DocumentSigningRecipientProvider recipient={directRecipient}>
       <DocumentFlowFormContainerHeader title={flowStep.title} description={flowStep.description} />
@@ -435,7 +441,8 @@ export const DirectTemplateSigningForm = ({
             fields={localFields}
             fieldsValidated={fieldsValidated}
             recipient={directRecipient}
-            allowDictateNextSigner={nextRecipient && template.templateMeta?.allowDictateNextSigner}
+            allowDictateNextSigner={Boolean(nextRecipient && template.templateMeta?.allowDictateNextSigner)}
+            pendingRecipients={pendingRecipients}
             defaultNextSigner={nextRecipient ? { name: nextRecipient.name, email: nextRecipient.email } : undefined}
           />
         </div>

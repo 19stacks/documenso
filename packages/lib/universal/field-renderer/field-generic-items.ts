@@ -68,6 +68,43 @@ export const upsertFieldRect = (field: FieldToRender, options: RenderFieldElemen
   return fieldRect;
 };
 
+export const upsertRecipientNameLabel = (
+  field: FieldToRender,
+  options: RenderFieldElementOptions,
+): Konva.Text | null => {
+  const { pageWidth, pageHeight, mode, pageLayer, color, recipientName } = options;
+
+  if (!recipientName || mode !== 'edit' || !color) {
+    return null;
+  }
+
+  const { fieldWidth } = calculateFieldPosition(field, pageWidth, pageHeight);
+
+  const nameText: Konva.Text =
+    pageLayer.findOne(`#${field.renderId}-recipient-name`) ||
+    new Konva.Text({
+      id: `${field.renderId}-recipient-name`,
+      name: 'recipient-name',
+      listening: false,
+    });
+
+  nameText.setAttrs({
+    x: 0,
+    y: -12,
+    text: recipientName,
+    fontSize: 9,
+    fontFamily: konvaTextFontFamily,
+    fontStyle: 'bold',
+    fill: konvaTextFill,
+    width: fieldWidth,
+    align: 'center',
+    ellipsis: true,
+    wrap: 'none',
+  } satisfies Partial<Konva.TextConfig>);
+
+  return nameText;
+};
+
 export const createSpinner = ({ fieldWidth, fieldHeight }: { fieldWidth: number; fieldHeight: number }) => {
   const loadingGroup = new Konva.Group({
     name: 'loading-spinner-group',

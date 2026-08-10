@@ -187,7 +187,22 @@ export type TCompleteDocumentWithTokenMutationSchema = z.infer<typeof ZCompleteD
  */
 export const ZCompleteDocumentWithTokenResponseSchema = z.discriminatedUnion('status', [
   z.object({ status: z.literal('REDIRECT'), redirectUrl: z.string() }),
-  z.object({ status: z.literal('SIGNED') }),
+  z.object({
+    status: z.literal('SIGNED'),
+    dictatedNextSignerUnavailable: z
+      .object({
+        email: z.string(),
+        name: z.string(),
+      })
+      .optional(),
+    notifiedNextRecipient: z
+      .object({
+        id: z.number(),
+        email: z.string(),
+        name: z.string(),
+      })
+      .optional(),
+  }),
 ]);
 
 export type TCompleteDocumentWithTokenResponseSchema = z.infer<typeof ZCompleteDocumentWithTokenResponseSchema>;

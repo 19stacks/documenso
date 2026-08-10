@@ -20,7 +20,7 @@ import { z } from 'zod';
 
 import { AppError, AppErrorCode } from '../../errors/app-error';
 import { jobs } from '../../jobs/client';
-import { DOCUMENT_AUDIT_LOG_TYPE, RECIPIENT_DIFF_TYPE } from '../../types/document-audit-logs';
+import { DOCUMENT_AUDIT_LOG_TYPE } from '../../types/document-audit-logs';
 import type { TRecipientActionAuthTypes } from '../../types/document-auth';
 import { DocumentAccessAuth, ZRecipientAuthOptionsSchema } from '../../types/document-auth';
 import { extractDerivedDocumentEmailSettings } from '../../types/document-email';
@@ -682,50 +682,33 @@ export const createDocumentFromDirectTemplate = async ({
         orderBy: [{ signingOrder: { sort: 'asc', nulls: 'last' } }, { id: 'asc' }],
       });
 
-      const nextRecipient = pendingRecipients[0];
+      const immediateNextRecipient = pendingRecipients[0];
 
-      if (nextRecipient) {
-        auditLogsToCreate.push(
-          createDocumentAuditLogData({
-            type: DOCUMENT_AUDIT_LOG_TYPE.RECIPIENT_UPDATED,
-            envelopeId: createdEnvelope.id,
-            user: {
-              name: user?.name || directRecipientName || '',
-              email: user?.email || directRecipientEmail,
-            },
-            metadata: requestMetadata,
-            data: {
-              recipientEmail: nextRecipient.email,
-              recipientName: nextRecipient.name,
-              recipientId: nextRecipient.id,
-              recipientRole: nextRecipient.role,
-              changes: [
-                {
-                  type: RECIPIENT_DIFF_TYPE.NAME,
-                  from: nextRecipient.name,
-                  to: nextSigner.name,
-                },
-                {
-                  type: RECIPIENT_DIFF_TYPE.EMAIL,
-                  from: nextRecipient.email,
-                  to: nextSigner.email,
-                },
-              ],
-            },
-          }),
+      if (immediateNextRecipient) {
+        const selectedRecipient = pendingRecipients.find(
+          (pendingRecipient) => pendingRecipient.email.toLowerCase() === nextSigner.email.toLowerCase(),
         );
 
-        await tx.recipient.update({
-          where: { id: nextRecipient.id },
-          data: {
-            ...(nextSigner && documentMeta?.allowDictateNextSigner
-              ? {
-                  name: nextSigner.name,
-                  email: nextSigner.email,
-                }
-              : {}),
-          },
-        });
+        // Promote the selected pending recipient to sign next by swapping signing order.
+        // If the dictated signer is no longer pending, fall back to the immediate next.
+        if (selectedRecipient && selectedRecipient.id !== immediateNextRecipient.id) {
+          const selectedSigningOrder = selectedRecipient.signingOrder;
+          const immediateNextSigningOrder = immediateNextRecipient.signingOrder;
+
+          await tx.recipient.update({
+            where: { id: selectedRecipient.id },
+            data: {
+              signingOrder: immediateNextSigningOrder,
+            },
+          });
+
+          await tx.recipient.update({
+            where: { id: immediateNextRecipient.id },
+            data: {
+              signingOrder: selectedSigningOrder,
+            },
+          });
+        }
       }
     }
 

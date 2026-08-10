@@ -78,7 +78,7 @@ export const EnvelopeEditorFieldsPage = () => {
 
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
 
-  const { envelope, editorFields, navigateToStep, editorConfig } = useCurrentEnvelopeEditor();
+  const { envelope, editorFields, navigateToStep, editorConfig, isEmbedded } = useCurrentEnvelopeEditor();
 
   const { currentEnvelopeItem, setCurrentEnvelopeItem } = useCurrentEnvelopeRender();
 
@@ -201,6 +201,54 @@ export const EnvelopeEditorFieldsPage = () => {
     });
   };
 
+  const addFieldsSection = (
+    <section className="px-4">
+      <h3 className="mb-2 font-semibold text-foreground text-sm">
+        {isEmbedded ? <Trans>Add Signature Fields</Trans> : <Trans>Add Fields</Trans>}
+      </h3>
+
+      <EnvelopeEditorFieldDragDrop
+        selectedRecipientId={editorFields.selectedRecipient?.id ?? null}
+        selectedEnvelopeItemId={currentEnvelopeItem?.id ?? null}
+      />
+
+      {editorConfig.fields?.allowAIDetection && (
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-4 w-full"
+            onClick={onDetectClick}
+            disabled={envelope.status !== DocumentStatus.DRAFT}
+            title={
+              envelope.status !== DocumentStatus.DRAFT
+                ? _(msg`You can only detect fields in draft envelopes`)
+                : undefined
+            }
+          >
+            <SparklesIcon className="mr-2 -ml-1 h-4 w-4" />
+            <Trans>Detect with AI</Trans>
+          </Button>
+
+          <AiFieldDetectionDialog
+            open={isAiFieldDialogOpen}
+            onOpenChange={setIsAiFieldDialogOpen}
+            onComplete={onFieldDetectionComplete}
+            envelopeId={envelope.id}
+            teamId={envelope.teamId}
+          />
+
+          <AiFeaturesEnableDialog
+            open={isAiEnableDialogOpen}
+            onOpenChange={setIsAiEnableDialogOpen}
+            onEnabled={onAiFeaturesEnabled}
+          />
+        </>
+      )}
+    </section>
+  );
+
   return (
     <div className="relative flex h-full">
       <div className="flex h-full w-full flex-col overflow-y-auto px-2" ref={scrollableContainerRef}>
@@ -306,6 +354,13 @@ export const EnvelopeEditorFieldsPage = () => {
       {/* Right Section - Form Fields Panel */}
       {currentEnvelopeItem && envelope.recipients.length > 0 && (
         <div className="sticky top-0 h-full w-80 flex-shrink-0 overflow-y-auto border-border border-l bg-background py-4">
+          {isEmbedded && (
+            <>
+              {addFieldsSection}
+              <Separator className="my-4" />
+            </>
+          )}
+
           {/* Recipient selector section. */}
           <section className="px-4">
             <h3 className="mb-2 font-semibold text-foreground text-sm">
@@ -333,54 +388,12 @@ export const EnvelopeEditorFieldsPage = () => {
               )}
           </section>
 
-          <Separator className="my-4" />
-
-          {/* Add fields section. */}
-          <section className="px-4">
-            <h3 className="mb-2 font-semibold text-foreground text-sm">
-              <Trans>Add Fields</Trans>
-            </h3>
-
-            <EnvelopeEditorFieldDragDrop
-              selectedRecipientId={editorFields.selectedRecipient?.id ?? null}
-              selectedEnvelopeItemId={currentEnvelopeItem?.id ?? null}
-            />
-
-            {editorConfig.fields?.allowAIDetection && (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-4 w-full"
-                  onClick={onDetectClick}
-                  disabled={envelope.status !== DocumentStatus.DRAFT}
-                  title={
-                    envelope.status !== DocumentStatus.DRAFT
-                      ? _(msg`You can only detect fields in draft envelopes`)
-                      : undefined
-                  }
-                >
-                  <SparklesIcon className="mr-2 -ml-1 h-4 w-4" />
-                  <Trans>Detect with AI</Trans>
-                </Button>
-
-                <AiFieldDetectionDialog
-                  open={isAiFieldDialogOpen}
-                  onOpenChange={setIsAiFieldDialogOpen}
-                  onComplete={onFieldDetectionComplete}
-                  envelopeId={envelope.id}
-                  teamId={envelope.teamId}
-                />
-
-                <AiFeaturesEnableDialog
-                  open={isAiEnableDialogOpen}
-                  onOpenChange={setIsAiEnableDialogOpen}
-                  onEnabled={onAiFeaturesEnabled}
-                />
-              </>
-            )}
-          </section>
+          {!isEmbedded && (
+            <>
+              <Separator className="my-4" />
+              {addFieldsSection}
+            </>
+          )}
 
           {/* Field details section. */}
           <AnimateGenericFadeInOut key={editorFields.selectedField?.formId}>

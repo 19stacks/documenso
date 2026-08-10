@@ -2,6 +2,7 @@ import type { DocumentAndSender } from '@documenso/lib/server-only/document/get-
 import type { TRecipientAccessAuth } from '@documenso/lib/types/document-auth';
 import { isFieldUnsignedAndRequired } from '@documenso/lib/utils/advanced-fields-helpers';
 import { sortFieldsByPosition } from '@documenso/lib/utils/fields';
+import { getPendingRecipientsForDictation } from '@documenso/lib/utils/recipients';
 import { isSignatureFieldType } from '@documenso/prisma/guards/is-signature-field';
 import type { RecipientWithFields } from '@documenso/prisma/types/recipient-with-fields';
 import { FieldToolTip } from '@documenso/ui/components/field/field-tooltip';
@@ -81,6 +82,11 @@ export const DocumentSigningForm = ({
     return fieldsRequiringValidation.filter((field) => field.recipientId === recipient.id);
   }, [fieldsRequiringValidation, recipient]);
 
+  const pendingRecipients = useMemo(
+    () => getPendingRecipientsForDictation(allRecipients, recipient.id),
+    [allRecipients, recipient.id],
+  );
+
   const localFieldsValidated = () => {
     setValidateUninsertedFields(true);
     fieldsValidated();
@@ -145,7 +151,8 @@ export const DocumentSigningForm = ({
                     completeDocument({ nextSigner, accessAuthOptions })
                   }
                   recipient={recipient}
-                  allowDictateNextSigner={document.documentMeta?.allowDictateNextSigner}
+                  allowDictateNextSigner={Boolean(nextRecipient && document.documentMeta?.allowDictateNextSigner)}
+                  pendingRecipients={pendingRecipients}
                   defaultNextSigner={
                     nextRecipient ? { name: nextRecipient.name, email: nextRecipient.email } : undefined
                   }
@@ -217,7 +224,8 @@ export const DocumentSigningForm = ({
                 onClose={() => !isAssistantSubmitting && setIsConfirmationDialogOpen(false)}
                 onConfirm={handleAssistantConfirmDialogSubmit}
                 isSubmitting={isAssistantSubmitting}
-                allowDictateNextSigner={nextRecipient && document.documentMeta?.allowDictateNextSigner}
+                allowDictateNextSigner={Boolean(nextRecipient && document.documentMeta?.allowDictateNextSigner)}
+                pendingRecipients={pendingRecipients}
                 defaultNextSigner={nextRecipient ? { name: nextRecipient.name, email: nextRecipient.email } : undefined}
               />
             </form>
@@ -285,7 +293,8 @@ export const DocumentSigningForm = ({
                     })
                   }
                   recipient={recipient}
-                  allowDictateNextSigner={nextRecipient && document.documentMeta?.allowDictateNextSigner}
+                  allowDictateNextSigner={Boolean(nextRecipient && document.documentMeta?.allowDictateNextSigner)}
+                  pendingRecipients={pendingRecipients}
                   defaultNextSigner={
                     nextRecipient ? { name: nextRecipient.name, email: nextRecipient.email } : undefined
                   }

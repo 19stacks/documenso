@@ -225,6 +225,7 @@ export const EnvelopeEditorFieldsPageRenderer = ({ pageData }: { pageData: PageR
       color: getRecipientColorKey(field.recipientId),
       editable: isFieldEditable,
       mode: 'edit',
+      recipientName: recipient?.name,
     });
 
     syncOverlapHighlight(fieldGroup, overlappingFieldFormIds.has(field.formId));

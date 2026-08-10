@@ -50,6 +50,18 @@ export type CompleteDocumentWithTokenOptions = {
   };
 };
 
+export type CompleteDocumentWithTokenResult = {
+  dictatedNextSignerUnavailable?: {
+    email: string;
+    name: string;
+  };
+  notifiedNextRecipient?: {
+    id: number;
+    email: string;
+    name: string;
+  };
+};
+
 export const completeDocumentWithToken = async ({
   token,
   id,
@@ -58,7 +70,7 @@ export const completeDocumentWithToken = async ({
   requestMetadata,
   nextSigner,
   recipientOverride,
-}: CompleteDocumentWithTokenOptions) => {
+}: CompleteDocumentWithTokenOptions): Promise<CompleteDocumentWithTokenResult> => {
   const envelope = await prisma.envelope.findFirstOrThrow({
     where: {
       ...unsafeBuildEnvelopeIdQuery(id, EnvelopeType.DOCUMENT),
@@ -387,6 +399,9 @@ export const completeDocumentWithToken = async ({
     orderBy: [{ signingOrder: { sort: 'asc', nulls: 'last' } }, { id: 'asc' }],
   });
 
+  let dictatedNextSignerUnavailable: CompleteDocumentWithTokenResult['dictatedNextSignerUnavailable'];
+  let notifiedNextRecipient: CompleteDocumentWithTokenResult['notifiedNextRecipient'];
+
   if (pendingRecipients.length > 0) {
     await jobs.triggerJob({
       name: 'send.document.pending.email',
@@ -397,62 +412,79 @@ export const completeDocumentWithToken = async ({
     });
 
     if (envelope.documentMeta?.signingOrder === DocumentSigningOrder.SEQUENTIAL) {
-      const [nextRecipient] = pendingRecipients;
+      const [immediateNextRecipient] = pendingRecipients;
+
+      let nextRecipientToNotify = immediateNextRecipient;
 
       await prisma.$transaction(async (tx) => {
         if (nextSigner && envelope.documentMeta?.allowDictateNextSigner) {
-          await tx.documentAuditLog.create({
-            data: createDocumentAuditLogData({
-              type: DOCUMENT_AUDIT_LOG_TYPE.RECIPIENT_UPDATED,
-              envelopeId: envelope.id,
-              user: {
-                name: recipientName,
-                email: recipientEmail,
-              },
-              requestMetadata,
+          const selectedRecipient = pendingRecipients.find(
+            (pendingRecipient) => pendingRecipient.email.toLowerCase() === nextSigner.email.toLowerCase(),
+          );
+
+          if (!selectedRecipient) {
+            dictatedNextSignerUnavailable = {
+              email: nextSigner.email,
+              name: nextSigner.name,
+            };
+          }
+
+          // Promote the selected pending recipient to sign next by swapping signing order.
+          // If the dictated signer is no longer pending (e.g. deleted), fall back to the
+          // immediate next recipient so signing completion still notifies someone.
+          if (selectedRecipient && selectedRecipient.id !== immediateNextRecipient.id) {
+            const selectedSigningOrder = selectedRecipient.signingOrder;
+            const immediateNextSigningOrder = immediateNextRecipient.signingOrder;
+
+            await tx.recipient.update({
+              where: { id: selectedRecipient.id },
               data: {
-                recipientEmail: nextRecipient.email,
-                recipientName: nextRecipient.name,
-                recipientId: nextRecipient.id,
-                recipientRole: nextRecipient.role,
-                changes: [
-                  {
-                    type: RECIPIENT_DIFF_TYPE.NAME,
-                    from: nextRecipient.name,
-                    to: nextSigner.name,
-                  },
-                  {
-                    type: RECIPIENT_DIFF_TYPE.EMAIL,
-                    from: nextRecipient.email,
-                    to: nextSigner.email,
-                  },
-                ],
+                signingOrder: immediateNextSigningOrder,
+                sendStatus: SendStatus.SENT,
+                sentAt: new Date(),
               },
-            }),
+            });
+
+            await tx.recipient.update({
+              where: { id: immediateNextRecipient.id },
+              data: {
+                signingOrder: selectedSigningOrder,
+              },
+            });
+
+            nextRecipientToNotify = selectedRecipient;
+          } else {
+            await tx.recipient.update({
+              where: { id: immediateNextRecipient.id },
+              data: {
+                sendStatus: SendStatus.SENT,
+                sentAt: new Date(),
+              },
+            });
+          }
+        } else {
+          await tx.recipient.update({
+            where: { id: immediateNextRecipient.id },
+            data: {
+              sendStatus: SendStatus.SENT,
+              sentAt: new Date(),
+            },
           });
         }
-
-        await tx.recipient.update({
-          where: { id: nextRecipient.id },
-          data: {
-            sendStatus: SendStatus.SENT,
-            sentAt: new Date(),
-            ...(nextSigner && envelope.documentMeta?.allowDictateNextSigner
-              ? {
-                  name: nextSigner.name,
-                  email: nextSigner.email,
-                }
-              : {}),
-          },
-        });
       });
+
+      notifiedNextRecipient = {
+        id: nextRecipientToNotify.id,
+        email: nextRecipientToNotify.email,
+        name: nextRecipientToNotify.name,
+      };
 
       await jobs.triggerJob({
         name: 'send.signing.requested.email',
         payload: {
           userId: envelope.userId,
           documentId: legacyDocumentId,
-          recipientId: nextRecipient.id,
+          recipientId: nextRecipientToNotify.id,
           requestMetadata,
         },
       });
@@ -497,4 +529,9 @@ export const completeDocumentWithToken = async ({
     userId: updatedDocument.userId,
     teamId: updatedDocument.teamId ?? undefined,
   });
+
+  return {
+    dictatedNextSignerUnavailable,
+    notifiedNextRecipient,
+  };
 };

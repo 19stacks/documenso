@@ -15,6 +15,7 @@ import type { CompletedField } from '@documenso/lib/types/fields';
 import { isFieldUnsignedAndRequired } from '@documenso/lib/utils/advanced-fields-helpers';
 import { getDocumentDataUrlForPdfViewer } from '@documenso/lib/utils/envelope-download';
 import { validateFieldsInserted } from '@documenso/lib/utils/fields';
+import { getPendingRecipientsForDictation } from '@documenso/lib/utils/recipients';
 import type { FieldWithSignatureAndFieldMeta } from '@documenso/prisma/types/field-with-signature-and-fieldmeta';
 import type { RecipientWithFields } from '@documenso/prisma/types/recipient-with-fields';
 import { trpc } from '@documenso/trpc/react';
@@ -22,7 +23,8 @@ import { DocumentReadOnlyFields } from '@documenso/ui/components/document/docume
 import { Button } from '@documenso/ui/primitives/button';
 import { Card, CardContent } from '@documenso/ui/primitives/card';
 import { ElementVisible } from '@documenso/ui/primitives/element-visible';
-import { Trans } from '@lingui/react/macro';
+import { useToast } from '@documenso/ui/primitives/use-toast';
+import { Trans, useLingui } from '@lingui/react/macro';
 import type { Field } from '@prisma/client';
 import { FieldType, RecipientRole } from '@prisma/client';
 import { LucideChevronDown, LucideChevronUp } from 'lucide-react';
@@ -75,6 +77,9 @@ export const DocumentSigningPageViewV1 = ({
   includeSenderDetails,
   branding,
 }: DocumentSigningPageViewV1Props) => {
+  const { t } = useLingui();
+  const { toast } = useToast();
+
   const { documentData, documentMeta } = document;
 
   const { derivedRecipientAccessAuth, user: authUser } = useRequiredDocumentSigningAuthContext();
@@ -116,7 +121,20 @@ export const DocumentSigningPageViewV1 = ({
       ...(nextSigner?.email && nextSigner?.name ? { nextSigner } : {}),
     };
 
-    await completeDocumentWithToken(payload);
+    const result = await completeDocumentWithToken(payload);
+
+    if (result.status === 'SIGNED' && result.dictatedNextSignerUnavailable) {
+      const unavailableEmail = result.dictatedNextSignerUnavailable.email;
+      const fallbackEmail = result.notifiedNextRecipient?.email;
+
+      toast({
+        title: t`Selected recipient is no longer available`,
+        description: fallbackEmail
+          ? t`${unavailableEmail} is no longer a recipient on this envelope. The next available recipient (${fallbackEmail}) has been notified instead.`
+          : t`${unavailableEmail} is no longer a recipient on this envelope.`,
+        variant: 'destructive',
+      });
+    }
 
     analytics.capture('App: Recipient has completed signing', {
       signerId: recipient.id,
@@ -169,6 +187,11 @@ export const DocumentSigningPageViewV1 = ({
       ? sortedRecipients[currentIndex + 1]
       : undefined;
   }, [document.documentMeta?.signingOrder, allRecipients, recipient.id]);
+
+  const pendingRecipients = useMemo(
+    () => getPendingRecipientsForDictation(allRecipients, recipient.id),
+    [allRecipients, recipient.id],
+  );
 
   const pendingFields = fieldsRequiringValidation.filter((field) => !field.inserted);
   const hasPendingFields = pendingFields.length > 0;
@@ -327,7 +350,8 @@ export const DocumentSigningPageViewV1 = ({
                           disabled={!isRecipientsTurn}
                           onSignatureComplete={async (nextSigner) => completeDocument({ nextSigner })}
                           recipient={recipient}
-                          allowDictateNextSigner={nextRecipient && documentMeta?.allowDictateNextSigner}
+                          allowDictateNextSigner={Boolean(nextRecipient && documentMeta?.allowDictateNextSigner)}
+                          pendingRecipients={pendingRecipients}
                           defaultNextSigner={
                             nextRecipient ? { name: nextRecipient.name, email: nextRecipient.email } : undefined
                           }

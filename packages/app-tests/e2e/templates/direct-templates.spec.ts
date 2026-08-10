@@ -349,19 +349,15 @@ test('[DIRECT_TEMPLATES]: V1 use direct template link with 2 recipients with nex
 
   await page.getByRole('button', { name: 'Complete' }).click();
 
+  await expect(page.getByText('Next Recipient')).toBeVisible();
   await expect(page.getByText('Next Recipient Name')).toBeVisible();
+  await expect(page.getByText(originalName, { exact: false }).first()).toBeVisible();
+  await expect(page.getByText(originalSecondSignerEmail)).toBeVisible();
 
-  const nextRecipientNameInputValue = await page.getByLabel('Next Recipient Name').inputValue();
-  expect(nextRecipientNameInputValue).toBe(originalName);
-
-  const nextRecipientEmailInputValue = await page.getByLabel('Next Recipient Email').inputValue();
-  expect(nextRecipientEmailInputValue).toBe(originalSecondSignerEmail);
-
-  const newName = 'Hello';
-  const newSecondSignerEmail = seedTestEmail();
-
-  await page.getByLabel('Next Recipient Email').fill(newSecondSignerEmail);
-  await page.getByLabel('Next Recipient Name').fill(newName);
+  // Name/email are read-only — only pending recipient selection via dropdown.
+  await expect(page.getByRole('combobox')).toBeVisible();
+  await expect(page.getByLabel('Next Recipient Name')).not.toBeVisible();
+  await expect(page.getByLabel('Next Recipient Email')).not.toBeVisible();
 
   await page.getByRole('button', { name: 'Sign' }).click();
   await page.waitForURL(/\/sign/);
@@ -383,8 +379,8 @@ test('[DIRECT_TEMPLATES]: V1 use direct template link with 2 recipients with nex
     throw new Error('Expected second recipient to exist');
   }
 
-  expect(updatedSecondRecipient.name).toBe(newName);
-  expect(updatedSecondRecipient.email).toBe(newSecondSignerEmail);
+  expect(updatedSecondRecipient.name).toBe(originalName);
+  expect(updatedSecondRecipient.email).toBe(originalSecondSignerEmail);
   await expectSigningRequestJobForRecipient(updatedSecondRecipient.id);
 });
 
@@ -483,19 +479,15 @@ test('[DIRECT_TEMPLATES]: V2 use direct template link with 2 recipients with nex
   await page.getByPlaceholder('Enter Your Name').fill(currentName);
   await page.getByPlaceholder('Enter Your Email').fill(currentEmail);
 
+  await expect(page.getByText('Next Recipient')).toBeVisible();
   await expect(page.getByText('Next Recipient Name')).toBeVisible();
+  await expect(page.getByText(originalName, { exact: false }).first()).toBeVisible();
+  await expect(page.getByText(originalSecondSignerEmail)).toBeVisible();
 
-  const nextRecipientNameInputValue = await page.getByLabel('Next Recipient Name').inputValue();
-  expect(nextRecipientNameInputValue).toBe(originalName);
-
-  const nextRecipientEmailInputValue = await page.getByLabel('Next Recipient Email').inputValue();
-  expect(nextRecipientEmailInputValue).toBe(originalSecondSignerEmail);
-
-  const newName = 'Hello';
-  const newSecondSignerEmail = seedTestEmail();
-
-  await page.getByLabel('Next Recipient Email').fill(newSecondSignerEmail);
-  await page.getByLabel('Next Recipient Name').fill(newName);
+  // Name/email are read-only — only pending recipient selection via dropdown.
+  await expect(page.getByRole('combobox')).toBeVisible();
+  await expect(page.getByLabel('Next Recipient Name')).not.toBeVisible();
+  await expect(page.getByLabel('Next Recipient Email')).not.toBeVisible();
 
   await page.getByRole('button', { name: 'Sign' }).click();
   await page.waitForURL(/\/sign/);
@@ -517,7 +509,7 @@ test('[DIRECT_TEMPLATES]: V2 use direct template link with 2 recipients with nex
     throw new Error('Expected second recipient to exist');
   }
 
-  expect(updatedSecondRecipient.name).toBe(newName);
-  expect(updatedSecondRecipient.email).toBe(newSecondSignerEmail);
+  expect(updatedSecondRecipient.name).toBe(originalName);
+  expect(updatedSecondRecipient.email).toBe(originalSecondSignerEmail);
   await expectSigningRequestJobForRecipient(updatedSecondRecipient.id);
 });

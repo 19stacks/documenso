@@ -42,6 +42,7 @@ export default function EnvelopeEditorHeader() {
     relativePath,
     editorConfig,
     flushAutosave,
+    editorRecipients,
   } = useCurrentEnvelopeEditor();
 
   const {
@@ -56,12 +57,22 @@ export default function EnvelopeEditorHeader() {
   );
 
   const handleCreateEmbeddedEnvelope = async () => {
+    const isValid = await editorRecipients.form.trigger();
+    if (!isValid) {
+      return;
+    }
+
     const latestEnvelope = await flushAutosave();
 
     embedded?.onCreate?.(latestEnvelope);
   };
 
   const handleUpdateEmbeddedEnvelope = async () => {
+    const isValid = await editorRecipients.form.trigger();
+    if (!isValid) {
+      return;
+    }
+
     const latestEnvelope = await flushAutosave();
 
     embedded?.onUpdate?.(latestEnvelope);

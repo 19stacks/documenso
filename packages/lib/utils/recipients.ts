@@ -131,3 +131,48 @@ export const assertRecipientNotExpired = (recipient: { expiresAt: Date | null })
     });
   }
 };
+
+type RecipientForDictation = {
+  id: number;
+  name: string;
+  email: string;
+  role: RecipientRole;
+  signingStatus: SigningStatus;
+  signingOrder: number | null;
+};
+
+/**
+ * Returns unsigned, non-CC recipients excluding the current signer, sorted by signing order.
+ * Used when dictating who should sign next.
+ */
+export const getPendingRecipientsForDictation = <T extends RecipientForDictation>(
+  recipients: T[],
+  currentRecipientId: number,
+): T[] => {
+  return [...recipients]
+    .filter(
+      (recipient) =>
+        recipient.id !== currentRecipientId &&
+        recipient.signingStatus !== SigningStatus.SIGNED &&
+        recipient.role !== RecipientRole.CC,
+    )
+    .sort((a, b) => {
+      if (a.signingOrder === null && b.signingOrder === null) {
+        return a.id - b.id;
+      }
+
+      if (a.signingOrder === null) {
+        return 1;
+      }
+
+      if (b.signingOrder === null) {
+        return -1;
+      }
+
+      if (a.signingOrder === b.signingOrder) {
+        return a.id - b.id;
+      }
+
+      return a.signingOrder - b.signingOrder;
+    });
+};

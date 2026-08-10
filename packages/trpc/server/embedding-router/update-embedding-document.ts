@@ -1,9 +1,11 @@
 import { AppError, AppErrorCode } from '@documenso/lib/errors/app-error';
 import { verifyEmbeddingPresignToken } from '@documenso/lib/server-only/embedding-presign/verify-embedding-presign-token';
+import { triggerEnvelopeUpdatedWebhook } from '@documenso/lib/server-only/envelope/trigger-envelope-updated-webhook';
 import { updateEnvelope } from '@documenso/lib/server-only/envelope/update-envelope';
 import { setFieldsForDocument } from '@documenso/lib/server-only/field/set-fields-for-document';
 import { setDocumentRecipients } from '@documenso/lib/server-only/recipient/set-document-recipients';
 import { nanoid } from '@documenso/lib/universal/id';
+import { EnvelopeType } from '@prisma/client';
 
 import { procedure } from '../trpc';
 import {
@@ -51,6 +53,9 @@ export const updateEmbeddingDocumentRoute = procedure
           externalId,
         },
         meta,
+        // The webhook is triggered manually at the end of this route so the
+        // payload includes the updated recipients.
+        triggerWebhook: false,
         requestMetadata: ctx.metadata,
       });
 
@@ -107,6 +112,19 @@ export const updateEmbeddingDocumentRoute = procedure
           pageHeight: field.height,
         })),
         requestMetadata: ctx.metadata,
+      });
+
+      // `updateEnvelope` above runs with `triggerWebhook: false` because the
+      // recipients are only persisted afterwards. Trigger the webhook here
+      // with the final state.
+      await triggerEnvelopeUpdatedWebhook({
+        userId: apiToken.userId,
+        teamId: apiToken.teamId ?? undefined,
+        id: {
+          type: 'documentId',
+          id: documentId,
+        },
+        type: EnvelopeType.DOCUMENT,
       });
 
       return {

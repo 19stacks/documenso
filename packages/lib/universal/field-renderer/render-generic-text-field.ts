@@ -16,6 +16,7 @@ import {
   konvaTextFontFamily,
   upsertFieldGroup,
   upsertFieldRect,
+  upsertRecipientNameLabel,
 } from './field-generic-items';
 import type { FieldToRender, RenderFieldElementOptions } from './field-renderer';
 import { calculateFieldPosition } from './field-renderer';
@@ -186,6 +187,11 @@ export const renderGenericTextFieldElement = (field: FieldToRender, options: Ren
 
   fieldGroup.add(fieldRect);
   fieldGroup.add(fieldText);
+
+  const recipientNameLabel = upsertRecipientNameLabel(field, options);
+  if (recipientNameLabel) {
+    fieldGroup.add(recipientNameLabel);
+  }
 
   fieldGroup.on('transform', () => {
     const groupScaleX = fieldGroup.scaleX();

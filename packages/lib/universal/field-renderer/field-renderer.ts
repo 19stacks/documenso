@@ -42,6 +42,7 @@ export type RenderFieldElementOptions = {
   color?: TRecipientColor;
   fieldCanvasStyle?: FieldCanvasStyle;
   translations: Record<FieldType, string> | null;
+  recipientName?: string;
 };
 
 export type FieldCanvasStyle = {
