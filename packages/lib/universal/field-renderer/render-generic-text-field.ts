@@ -188,7 +188,7 @@ export const renderGenericTextFieldElement = (field: FieldToRender, options: Ren
   fieldGroup.add(fieldRect);
   fieldGroup.add(fieldText);
 
-  const recipientNameLabel = upsertRecipientNameLabel(field, options);
+  const recipientNameLabel = upsertRecipientNameLabel(field, options, textFontSize);
   if (recipientNameLabel) {
     fieldGroup.add(recipientNameLabel);
   }

@@ -184,7 +184,7 @@ export const renderDropdownFieldElement = (field: FieldToRender, options: Render
     createFieldHoverInteraction({ fieldGroup, fieldRect, options });
   }
 
-  const recipientNameLabel = upsertRecipientNameLabel(field, options);
+  const recipientNameLabel = upsertRecipientNameLabel(field, options, fontSize);
   if (recipientNameLabel) {
     fieldGroup.add(recipientNameLabel);
   }

@@ -71,8 +71,9 @@ export const upsertFieldRect = (field: FieldToRender, options: RenderFieldElemen
 export const upsertRecipientNameLabel = (
   field: FieldToRender,
   options: RenderFieldElementOptions,
+  fieldFontSize?: number,
 ): Konva.Text | null => {
-  const { pageWidth, pageHeight, mode, pageLayer, color, recipientName } = options;
+  const { pageWidth, pageHeight, mode, color, recipientName } = options;
 
   if (!recipientName || mode !== 'edit' || !color) {
     return null;
@@ -80,19 +81,20 @@ export const upsertRecipientNameLabel = (
 
   const { fieldWidth } = calculateFieldPosition(field, pageWidth, pageHeight);
 
-  const nameText: Konva.Text =
-    pageLayer.findOne(`#${field.renderId}-recipient-name`) ||
-    new Konva.Text({
-      id: `${field.renderId}-recipient-name`,
-      name: 'recipient-name',
-      listening: false,
-    });
+  const nameFontSize = Math.max(7, fieldFontSize ?? 12);
+  const nameY = -(nameFontSize + 4);
+
+  const nameText = new Konva.Text({
+    id: `${field.renderId}-recipient-name`,
+    name: 'recipient-name',
+    listening: false,
+  });
 
   nameText.setAttrs({
     x: 0,
-    y: -12,
+    y: nameY,
     text: recipientName,
-    fontSize: 9,
+    fontSize: nameFontSize,
     fontFamily: konvaTextFontFamily,
     fontStyle: 'bold',
     fill: konvaTextFill,
