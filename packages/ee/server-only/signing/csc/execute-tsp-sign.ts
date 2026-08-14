@@ -10,6 +10,7 @@ import { putPdfFileServerSide } from '@documenso/lib/universal/upload/put-file.s
 import { createDocumentAuditLogData } from '@documenso/lib/utils/document-audit-logs';
 import { extractDocumentAuthMethods } from '@documenso/lib/utils/document-auth';
 import { mapSecondaryIdToDocumentId } from '@documenso/lib/utils/envelope';
+import { getRecipientsWithMissingFields } from '@documenso/lib/utils/recipients';
 import { prisma } from '@documenso/prisma';
 import { PDF } from '@libpdf/core';
 import {
@@ -486,23 +487,37 @@ export const executeTspSign = async (opts: ExecuteTspSignOptions): Promise<Execu
     // — `prepareCscRecipientSigning` doesn't accept one.
     const [nextRecipient] = pendingRecipients;
 
-    await prisma.recipient.update({
-      where: { id: nextRecipient.id },
-      data: {
-        sendStatus: SendStatus.SENT,
-        sentAt: new Date(),
+    const fields = await prisma.field.findMany({
+      where: {
+        envelopeId: envelope.id,
+      },
+      select: {
+        type: true,
+        recipientId: true,
       },
     });
 
-    await jobs.triggerJob({
-      name: 'send.signing.requested.email',
-      payload: {
-        userId: envelope.userId,
-        documentId: legacyDocumentId,
-        recipientId: nextRecipient.id,
-        requestMetadata,
-      },
-    });
+    const isNextRecipientReadyToSign = getRecipientsWithMissingFields([nextRecipient], fields).length === 0;
+
+    if (isNextRecipientReadyToSign) {
+      await prisma.recipient.update({
+        where: { id: nextRecipient.id },
+        data: {
+          sendStatus: SendStatus.SENT,
+          sentAt: new Date(),
+        },
+      });
+
+      await jobs.triggerJob({
+        name: 'send.signing.requested.email',
+        payload: {
+          userId: envelope.userId,
+          documentId: legacyDocumentId,
+          recipientId: nextRecipient.id,
+          requestMetadata,
+        },
+      });
+    }
   }
 
   const haveAllRecipientsSigned = await prisma.envelope.findFirst({

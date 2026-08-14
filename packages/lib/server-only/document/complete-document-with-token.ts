@@ -25,7 +25,7 @@ import { mapEnvelopeToWebhookDocumentPayload, ZWebhookDocumentSchema } from '../
 import { extractDocumentAuthMethods } from '../../utils/document-auth';
 import type { EnvelopeIdOptions } from '../../utils/envelope';
 import { mapSecondaryIdToDocumentId, unsafeBuildEnvelopeIdQuery } from '../../utils/envelope';
-import { assertRecipientNotExpired } from '../../utils/recipients';
+import { assertRecipientNotExpired, getRecipientsWithMissingFields } from '../../utils/recipients';
 import { getIsRecipientsTurnToSign } from '../recipient/get-is-recipient-turn';
 import { triggerWebhook } from '../webhooks/trigger/trigger-webhook';
 import { isRecipientAuthorized } from './is-recipient-authorized';
@@ -416,19 +416,41 @@ export const completeDocumentWithToken = async ({
 
       let nextRecipientToNotify = immediateNextRecipient;
 
-      await prisma.$transaction(async (tx) => {
-        if (nextSigner && envelope.documentMeta?.allowDictateNextSigner) {
-          const selectedRecipient = pendingRecipients.find(
-            (pendingRecipient) => pendingRecipient.email.toLowerCase() === nextSigner.email.toLowerCase(),
-          );
+      // Resolve any dictated next signer before deciding whether to notify, so we can
+      // skip the email when the recipient still has no signature fields.
+      let selectedRecipient: (typeof pendingRecipients)[number] | undefined;
 
-          if (!selectedRecipient) {
-            dictatedNextSignerUnavailable = {
-              email: nextSigner.email,
-              name: nextSigner.name,
-            };
-          }
+      if (nextSigner && envelope.documentMeta?.allowDictateNextSigner) {
+        selectedRecipient = pendingRecipients.find(
+          (pendingRecipient) => pendingRecipient.email.toLowerCase() === nextSigner.email.toLowerCase(),
+        );
 
+        if (!selectedRecipient) {
+          dictatedNextSignerUnavailable = {
+            email: nextSigner.email,
+            name: nextSigner.name,
+          };
+        }
+
+        if (selectedRecipient) {
+          nextRecipientToNotify = selectedRecipient;
+        }
+      }
+
+      const fields = await prisma.field.findMany({
+        where: {
+          envelopeId: envelope.id,
+        },
+        select: {
+          type: true,
+          recipientId: true,
+        },
+      });
+
+      const isNextRecipientReadyToSign = getRecipientsWithMissingFields([nextRecipientToNotify], fields).length === 0;
+
+      if (isNextRecipientReadyToSign) {
+        await prisma.$transaction(async (tx) => {
           // Promote the selected pending recipient to sign next by swapping signing order.
           // If the dictated signer is no longer pending (e.g. deleted), fall back to the
           // immediate next recipient so signing completion still notifies someone.
@@ -451,8 +473,6 @@ export const completeDocumentWithToken = async ({
                 signingOrder: selectedSigningOrder,
               },
             });
-
-            nextRecipientToNotify = selectedRecipient;
           } else {
             await tx.recipient.update({
               where: { id: immediateNextRecipient.id },
@@ -462,32 +482,24 @@ export const completeDocumentWithToken = async ({
               },
             });
           }
-        } else {
-          await tx.recipient.update({
-            where: { id: immediateNextRecipient.id },
-            data: {
-              sendStatus: SendStatus.SENT,
-              sentAt: new Date(),
-            },
-          });
-        }
-      });
+        });
 
-      notifiedNextRecipient = {
-        id: nextRecipientToNotify.id,
-        email: nextRecipientToNotify.email,
-        name: nextRecipientToNotify.name,
-      };
+        notifiedNextRecipient = {
+          id: nextRecipientToNotify.id,
+          email: nextRecipientToNotify.email,
+          name: nextRecipientToNotify.name,
+        };
 
-      await jobs.triggerJob({
-        name: 'send.signing.requested.email',
-        payload: {
-          userId: envelope.userId,
-          documentId: legacyDocumentId,
-          recipientId: nextRecipientToNotify.id,
-          requestMetadata,
-        },
-      });
+        await jobs.triggerJob({
+          name: 'send.signing.requested.email',
+          payload: {
+            userId: envelope.userId,
+            documentId: legacyDocumentId,
+            recipientId: nextRecipientToNotify.id,
+            requestMetadata,
+          },
+        });
+      }
     }
   }
 

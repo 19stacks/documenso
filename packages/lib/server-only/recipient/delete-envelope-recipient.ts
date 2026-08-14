@@ -15,7 +15,11 @@ import { jobs } from '../../jobs/client';
 import { extractDerivedDocumentEmailSettings } from '../../types/document-email';
 import { createDocumentAuditLogData } from '../../utils/document-audit-logs';
 import { mapSecondaryIdToDocumentId } from '../../utils/envelope';
-import { canRecipientBeModified, isRecipientEmailValidForSending } from '../../utils/recipients';
+import {
+  canRecipientBeModified,
+  getRecipientsWithMissingFields,
+  isRecipientEmailValidForSending,
+} from '../../utils/recipients';
 import { assertEnvelopeMutable } from '../envelope/assert-envelope-mutable';
 import { getEnvelopeWhereInput } from '../envelope/get-envelope-by-id';
 
@@ -194,7 +198,30 @@ export const deleteEnvelopeRecipient = async ({
         })
         .every((recipient) => recipient.signingStatus === SigningStatus.SIGNED);
 
-    if (nextRecipient && isNextRecipientsTurn && nextRecipient.sendStatus !== SendStatus.SENT) {
+    // Don't notify the next signer until they have their required signature fields,
+    // so the recipient is not emailed before they are able to sign.
+    let isNextRecipientReadyToSign = false;
+
+    if (nextRecipient) {
+      const fields = await prisma.field.findMany({
+        where: {
+          envelopeId: envelope.id,
+        },
+        select: {
+          type: true,
+          recipientId: true,
+        },
+      });
+
+      isNextRecipientReadyToSign = getRecipientsWithMissingFields([nextRecipient], fields).length === 0;
+    }
+
+    if (
+      nextRecipient &&
+      isNextRecipientsTurn &&
+      nextRecipient.sendStatus !== SendStatus.SENT &&
+      isNextRecipientReadyToSign
+    ) {
       await prisma.recipient.update({
         where: { id: nextRecipient.id },
         data: {
