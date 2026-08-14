@@ -27,7 +27,7 @@ export const appMiddleware = async (c: Context, next: Next) => {
 
   if (env('NEXT_PUBLIC_DISABLE_UI') === 'true') {
     const allowedPathRegex =
-      /^\/(_recipient\/|d\/|embed\/|share\/|sign\/|_share\/|_redirects\/|_internal\/|_profile\/|fonts\/|static\/)/;
+      /^\/(_recipient\/|d\/|embed\/|share\/|sign\/|_share\/|_redirects\/|_internal\/|_profile\/|fonts\/|static\/|articles\/signature-disclosure(\/|\.data|$))/;
 
     if (!allowedPathRegex.test(path)) {
       return new Response(null, { status: 404 });
