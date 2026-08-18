@@ -1,6 +1,7 @@
 import { AppError, AppErrorCode } from '@documenso/lib/errors/app-error';
 import { jobs } from '@documenso/lib/jobs/client';
 import { getRecipientByToken } from '@documenso/lib/server-only/recipient/get-recipient-by-token';
+import { isRecipientReadyToSign } from '@documenso/lib/server-only/recipient/is-recipient-ready-to-sign';
 import { triggerWebhook } from '@documenso/lib/server-only/webhooks/trigger/trigger-webhook';
 import { DOCUMENT_AUDIT_LOG_TYPE } from '@documenso/lib/types/document-audit-logs';
 import { mapEnvelopeToWebhookDocumentPayload, ZWebhookDocumentSchema } from '@documenso/lib/types/webhook-payload';
@@ -10,7 +11,6 @@ import { putPdfFileServerSide } from '@documenso/lib/universal/upload/put-file.s
 import { createDocumentAuditLogData } from '@documenso/lib/utils/document-audit-logs';
 import { extractDocumentAuthMethods } from '@documenso/lib/utils/document-auth';
 import { mapSecondaryIdToDocumentId } from '@documenso/lib/utils/envelope';
-import { getRecipientsWithMissingFields } from '@documenso/lib/utils/recipients';
 import { prisma } from '@documenso/prisma';
 import { PDF } from '@libpdf/core';
 import {
@@ -487,17 +487,7 @@ export const executeTspSign = async (opts: ExecuteTspSignOptions): Promise<Execu
     // — `prepareCscRecipientSigning` doesn't accept one.
     const [nextRecipient] = pendingRecipients;
 
-    const fields = await prisma.field.findMany({
-      where: {
-        envelopeId: envelope.id,
-      },
-      select: {
-        type: true,
-        recipientId: true,
-      },
-    });
-
-    const isNextRecipientReadyToSign = getRecipientsWithMissingFields([nextRecipient], fields).length === 0;
+    const isNextRecipientReadyToSign = await isRecipientReadyToSign(nextRecipient, envelope.id);
 
     if (isNextRecipientReadyToSign) {
       await prisma.recipient.update({

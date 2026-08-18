@@ -3,10 +3,10 @@ import { prisma } from '@documenso/prisma';
 import { PDF } from '@libpdf/core';
 import { i18n } from '@lingui/core';
 
-import { IS_BILLING_ENABLED } from '../../constants/app';
 import { ZSupportedLanguageCodeSchema } from '../../constants/i18n';
 import { parseDocumentAuditLogData } from '../../utils/document-audit-logs';
 import { getTranslations } from '../../utils/i18n';
+import { resolveHidePoweredBy } from '../../utils/resolve-hide-powered-by';
 import { getOrganisationClaimByTeamId } from '../organisation/get-organisation-claims';
 import type { GenerateCertificatePdfOptions } from './generate-certificate-pdf';
 import { renderAuditLogs } from './render-audit-logs';
@@ -49,7 +49,7 @@ export const generateAuditLogPdf = async (options: GenerateAuditLogPdfOptions) =
     envelopeItems,
     recipients,
     auditLogs,
-    hidePoweredBy: organisationClaim.flags.hidePoweredBy ?? !IS_BILLING_ENABLED(),
+    hidePoweredBy: resolveHidePoweredBy(organisationClaim.flags),
     pageWidth,
     pageHeight,
     i18n,

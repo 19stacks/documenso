@@ -25,8 +25,9 @@ import { mapEnvelopeToWebhookDocumentPayload, ZWebhookDocumentSchema } from '../
 import { extractDocumentAuthMethods } from '../../utils/document-auth';
 import type { EnvelopeIdOptions } from '../../utils/envelope';
 import { mapSecondaryIdToDocumentId, unsafeBuildEnvelopeIdQuery } from '../../utils/envelope';
-import { assertRecipientNotExpired, getRecipientsWithMissingFields } from '../../utils/recipients';
+import { assertRecipientNotExpired } from '../../utils/recipients';
 import { getIsRecipientsTurnToSign } from '../recipient/get-is-recipient-turn';
+import { isRecipientReadyToSign } from '../recipient/is-recipient-ready-to-sign';
 import { triggerWebhook } from '../webhooks/trigger/trigger-webhook';
 import { isRecipientAuthorized } from './is-recipient-authorized';
 
@@ -437,17 +438,7 @@ export const completeDocumentWithToken = async ({
         }
       }
 
-      const fields = await prisma.field.findMany({
-        where: {
-          envelopeId: envelope.id,
-        },
-        select: {
-          type: true,
-          recipientId: true,
-        },
-      });
-
-      const isNextRecipientReadyToSign = getRecipientsWithMissingFields([nextRecipientToNotify], fields).length === 0;
+      const isNextRecipientReadyToSign = await isRecipientReadyToSign(nextRecipientToNotify, envelope.id);
 
       if (isNextRecipientReadyToSign) {
         await prisma.$transaction(async (tx) => {
@@ -472,6 +463,31 @@ export const completeDocumentWithToken = async ({
               data: {
                 signingOrder: selectedSigningOrder,
               },
+            });
+
+            await tx.documentAuditLog.create({
+              data: createDocumentAuditLogData({
+                type: DOCUMENT_AUDIT_LOG_TYPE.RECIPIENT_UPDATED,
+                envelopeId: envelope.id,
+                user: {
+                  name: recipientName,
+                  email: recipientEmail,
+                },
+                requestMetadata,
+                data: {
+                  recipientEmail: selectedRecipient.email,
+                  recipientName: selectedRecipient.name,
+                  recipientId: selectedRecipient.id,
+                  recipientRole: selectedRecipient.role,
+                  changes: [
+                    {
+                      type: RECIPIENT_DIFF_TYPE.SIGNING_ORDER,
+                      from: selectedSigningOrder,
+                      to: immediateNextSigningOrder,
+                    },
+                  ],
+                },
+              }),
             });
           } else {
             await tx.recipient.update({

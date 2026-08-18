@@ -4,8 +4,8 @@ import { EnvelopeType, WebhookTriggerEvents } from '@prisma/client';
 import { AppError, AppErrorCode } from '../../errors/app-error';
 import { mapEnvelopeToWebhookDocumentPayload, ZWebhookDocumentSchema } from '../../types/webhook-payload';
 import type { EnvelopeIdOptions } from '../../utils/envelope';
+import { unsafeBuildEnvelopeIdQuery } from '../../utils/envelope';
 import { triggerWebhook } from '../webhooks/trigger/trigger-webhook';
-import { getEnvelopeWhereInput } from './get-envelope-by-id';
 
 export type TriggerEnvelopeUpdatedWebhookOptions = {
   userId: number;
@@ -22,6 +22,11 @@ export type TriggerEnvelopeUpdatedWebhookOptions = {
  * with `triggerWebhook: false` while recipients/fields are updated
  * separately afterwards — otherwise the webhook would be emitted with a
  * stale recipient set.
+ *
+ * NOTE: This function does NOT re-authorise the caller. Callers must already
+ * have authorised the user against the envelope (e.g. via a verified embed
+ * presign token) before invoking it — mirroring `unsafeBuildEnvelopeIdQuery`,
+ * which only scopes the query by id/type.
  */
 export const triggerEnvelopeUpdatedWebhook = async ({
   userId,
@@ -29,15 +34,8 @@ export const triggerEnvelopeUpdatedWebhook = async ({
   id,
   type,
 }: TriggerEnvelopeUpdatedWebhookOptions) => {
-  const { envelopeWhereInput } = await getEnvelopeWhereInput({
-    id,
-    type,
-    userId,
-    teamId,
-  });
-
   const envelope = await prisma.envelope.findFirst({
-    where: envelopeWhereInput,
+    where: unsafeBuildEnvelopeIdQuery(id, type),
     include: {
       documentMeta: true,
       recipients: true,

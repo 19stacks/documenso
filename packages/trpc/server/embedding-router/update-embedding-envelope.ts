@@ -343,19 +343,6 @@ export const updateEmbeddingEnvelopeRoute = procedure
     // Validate that all SIGNER recipients have at least one signature field.
     // This matches the validation performed by `sendDocument` at distribute time,
     // so the embed editor surfaces the same error before the envelope is updated.
-    ctx.logger.info({
-      validation: 'fields-check',
-      totalRecipients: data.recipients.length,
-      recipients: data.recipients.map((r) => ({
-        id: r.id ?? null,
-        role: r.role,
-        name: r.name,
-        email: r.email,
-        fieldsCount: (r.fields ?? []).length,
-        fieldTypes: (r.fields ?? []).map((f) => f.type),
-      })),
-    });
-
     const signersMissingSignatureFields = data.recipients.filter((recipient) => {
       if (recipient.role !== RecipientRole.SIGNER) {
         return false;

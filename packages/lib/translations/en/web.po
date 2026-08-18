@@ -486,6 +486,16 @@ msgstr "{teamName} has invited you to {0}<0/>\"{documentName}\""
 msgid "{teamName} has invited you to {action} {documentName}"
 msgstr "{teamName} has invited you to {action} {documentName}"
 
+#: apps/remix/app/components/general/document-signing/document-signing-page-view-v1.tsx
+#: apps/remix/app/components/general/envelope-signing/envelope-signing-complete-dialog.tsx
+msgid "{unavailableEmail} is no longer a recipient on this envelope."
+msgstr "{unavailableEmail} is no longer a recipient on this envelope."
+
+#: apps/remix/app/components/general/document-signing/document-signing-page-view-v1.tsx
+#: apps/remix/app/components/general/envelope-signing/envelope-signing-complete-dialog.tsx
+msgid "{unavailableEmail} is no longer a recipient on this envelope. The next available recipient ({fallbackEmail}) has been notified instead."
+msgstr "{unavailableEmail} is no longer a recipient on this envelope. The next available recipient ({fallbackEmail}) has been notified instead."
+
 #: packages/lib/utils/document-audit-logs.ts
 msgid "{user} added a field"
 msgstr "{user} added a field"
@@ -1425,6 +1435,12 @@ msgstr "Add Recipients"
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-recipient-form.tsx
 msgid "Add recipients to your document"
 msgstr "Add recipients to your document"
+
+#: apps/remix/app/components/general/envelope-editor/envelope-editor-fields-page.tsx
+#: apps/remix/app/components/general/envelope-editor/envelope-editor-upload-page.tsx
+#: apps/remix/app/components/general/envelope-editor/envelope-editor.tsx
+msgid "Add Signature Fields"
+msgstr "Add Signature Fields"
 
 #: apps/remix/app/components/embed/authoring/configure-document-recipients.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-recipient-form.tsx
@@ -4852,7 +4868,6 @@ msgstr "Electronic Signature Disclosure"
 
 #: apps/remix/app/components/dialogs/admin-user-create-dialog.tsx
 #: apps/remix/app/components/dialogs/ai-field-detection-dialog.tsx
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
 #: apps/remix/app/components/dialogs/email-transport-send-test-dialog.tsx
 #: apps/remix/app/components/dialogs/envelope-distribute-dialog.tsx
 #: apps/remix/app/components/dialogs/team-email-add-dialog.tsx
@@ -4870,6 +4885,7 @@ msgstr "Electronic Signature Disclosure"
 #: apps/remix/app/components/forms/signin.tsx
 #: apps/remix/app/components/general/direct-template/direct-template-configure-form.tsx
 #: apps/remix/app/components/general/document-signing/document-signing-email-field.tsx
+#: apps/remix/app/components/general/document-signing/next-signer-select.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-fields-drag-drop.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-recipient-form.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-recipient-form.tsx
@@ -5264,16 +5280,6 @@ msgstr "Enter Text"
 #: apps/remix/app/components/dialogs/organisation-email-domain-create-dialog.tsx
 msgid "Enter the domain you want to use for sending emails (without http:// or www)"
 msgstr "Enter the domain you want to use for sending emails (without http:// or www)"
-
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
-#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
-msgid "Enter the next signer's email"
-msgstr "Enter the next signer's email"
-
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
-#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
-msgid "Enter the next signer's name"
-msgstr "Enter the next signer's name"
 
 #: apps/remix/app/components/general/document-signing/access-auth-2fa-form.tsx
 msgid "Enter verification code"
@@ -7246,7 +7252,6 @@ msgstr "N/A"
 
 #: apps/remix/app/components/dialogs/admin-user-create-dialog.tsx
 #: apps/remix/app/components/dialogs/ai-field-detection-dialog.tsx
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
 #: apps/remix/app/components/dialogs/folder-update-dialog.tsx
 #: apps/remix/app/components/dialogs/team-email-add-dialog.tsx
 #: apps/remix/app/components/dialogs/team-email-update-dialog.tsx
@@ -7257,6 +7262,7 @@ msgstr "N/A"
 #: apps/remix/app/components/forms/subscription-claim-form.tsx
 #: apps/remix/app/components/general/claim-account.tsx
 #: apps/remix/app/components/general/document-signing/document-signing-name-field.tsx
+#: apps/remix/app/components/general/document-signing/next-signer-select.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-fields-drag-drop.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-recipient-form.tsx
 #: apps/remix/app/components/tables/admin-claims-table.tsx
@@ -7348,6 +7354,10 @@ msgstr "Next"
 #: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
 msgid "Next Field"
 msgstr "Next Field"
+
+#: apps/remix/app/components/general/document-signing/next-signer-select.tsx
+msgid "Next Recipient"
+msgstr "Next Recipient"
 
 #: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
 msgid "Next Recipient Email"
@@ -9672,6 +9682,10 @@ msgstr "Select the members to add to this group"
 msgid "Select the members to include in this group"
 msgstr "Select the members to include in this group"
 
+#: apps/remix/app/components/general/document-signing/next-signer-select.tsx
+msgid "Select the next signer"
+msgstr "Select the next signer"
+
 #: apps/remix/app/components/general/webhook-multiselect-combobox.tsx
 #: apps/remix/app/components/general/webhook-multiselect-combobox.tsx
 msgid "Select triggers"
@@ -9701,6 +9715,11 @@ msgstr "Selected items have been moved."
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-preview-page.tsx
 msgid "Selected Recipient"
 msgstr "Selected Recipient"
+
+#: apps/remix/app/components/general/document-signing/document-signing-page-view-v1.tsx
+#: apps/remix/app/components/general/envelope-signing/envelope-signing-complete-dialog.tsx
+msgid "Selected recipient is no longer available"
+msgstr "Selected recipient is no longer available"
 
 #: apps/remix/app/components/dialogs/envelopes-bulk-delete-dialog.tsx
 msgid "Selected templates will be permanently deleted"
@@ -11217,12 +11236,6 @@ msgstr "The following signers are missing signature fields:"
 msgid "The following team has been deleted. You will no longer be able to access this team and its documents"
 msgstr "The following team has been deleted. You will no longer be able to access this team and its documents"
 
-#. placeholder {0}: form.watch('name')
-#. placeholder {1}: form.watch('email')
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
-msgid "The next recipient to sign this document will be <0>{0}</0> (<1>{1}</1>)."
-msgstr "The next recipient to sign this document will be <0>{0}</0> (<1>{1}</1>)."
-
 #: apps/remix/app/routes/_authenticated+/o.$orgUrl.settings.sso.tsx
 msgid "The OpenID discovery endpoint URL for your provider"
 msgstr "The OpenID discovery endpoint URL for your provider"
@@ -12400,7 +12413,6 @@ msgstr "Update password"
 msgid "Update profile"
 msgstr "Update profile"
 
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
 #: apps/remix/app/components/tables/admin-document-recipient-item-table.tsx
 msgid "Update Recipient"
 msgstr "Update Recipient"

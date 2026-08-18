@@ -15,13 +15,10 @@ import { jobs } from '../../jobs/client';
 import { extractDerivedDocumentEmailSettings } from '../../types/document-email';
 import { createDocumentAuditLogData } from '../../utils/document-audit-logs';
 import { mapSecondaryIdToDocumentId } from '../../utils/envelope';
-import {
-  canRecipientBeModified,
-  getRecipientsWithMissingFields,
-  isRecipientEmailValidForSending,
-} from '../../utils/recipients';
+import { canRecipientBeModified, isRecipientEmailValidForSending } from '../../utils/recipients';
 import { assertEnvelopeMutable } from '../envelope/assert-envelope-mutable';
 import { getEnvelopeWhereInput } from '../envelope/get-envelope-by-id';
+import { isRecipientReadyToSign } from './is-recipient-ready-to-sign';
 
 export type DeleteEnvelopeRecipientOptions = {
   userId: number;
@@ -203,17 +200,7 @@ export const deleteEnvelopeRecipient = async ({
     let isNextRecipientReadyToSign = false;
 
     if (nextRecipient) {
-      const fields = await prisma.field.findMany({
-        where: {
-          envelopeId: envelope.id,
-        },
-        select: {
-          type: true,
-          recipientId: true,
-        },
-      });
-
-      isNextRecipientReadyToSign = getRecipientsWithMissingFields([nextRecipient], fields).length === 0;
+      isNextRecipientReadyToSign = await isRecipientReadyToSign(nextRecipient, envelope.id);
     }
 
     if (

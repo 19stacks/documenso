@@ -20,7 +20,7 @@ import { z } from 'zod';
 
 import { AppError, AppErrorCode } from '../../errors/app-error';
 import { jobs } from '../../jobs/client';
-import { DOCUMENT_AUDIT_LOG_TYPE } from '../../types/document-audit-logs';
+import { DOCUMENT_AUDIT_LOG_TYPE, RECIPIENT_DIFF_TYPE } from '../../types/document-audit-logs';
 import type { TRecipientActionAuthTypes } from '../../types/document-auth';
 import { DocumentAccessAuth, ZRecipientAuthOptionsSchema } from '../../types/document-auth';
 import { extractDerivedDocumentEmailSettings } from '../../types/document-email';
@@ -707,6 +707,32 @@ export const createDocumentFromDirectTemplate = async ({
             data: {
               signingOrder: selectedSigningOrder,
             },
+          });
+
+          await tx.documentAuditLog.create({
+            data: createDocumentAuditLogData({
+              type: DOCUMENT_AUDIT_LOG_TYPE.RECIPIENT_UPDATED,
+              envelopeId: createdEnvelope.id,
+              user: {
+                id: user?.id,
+                name: user?.name,
+                email: directRecipientEmail,
+              },
+              metadata: requestMetadata,
+              data: {
+                recipientEmail: selectedRecipient.email,
+                recipientName: selectedRecipient.name,
+                recipientId: selectedRecipient.id,
+                recipientRole: selectedRecipient.role,
+                changes: [
+                  {
+                    type: RECIPIENT_DIFF_TYPE.SIGNING_ORDER,
+                    from: selectedSigningOrder,
+                    to: immediateNextSigningOrder,
+                  },
+                ],
+              },
+            }),
           });
         }
       }

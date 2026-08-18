@@ -19,13 +19,6 @@ export const createUserRoute = adminProcedure
       createdUserId: user.id,
     });
 
-    // await jobsClient.triggerJob({
-    //   name: 'send.admin.user.created.email',
-    //   payload: {
-    //     userId: user.id,
-    //   },
-    // });
-
     return {
       userId: user.id,
     };

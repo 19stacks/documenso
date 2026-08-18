@@ -16,6 +16,7 @@ import { IS_BILLING_ENABLED } from '../../constants/app';
 import { DOCUMENSO_INTERNAL_EMAIL } from '../../constants/email';
 import { AppError, AppErrorCode } from '../../errors/app-error';
 import { logger } from '../../utils/logger';
+import { resolveHidePoweredBy } from '../../utils/resolve-hide-powered-by';
 import {
   organisationGlobalSettingsToBranding,
   teamGlobalSettingsToBranding,
@@ -220,7 +221,7 @@ const handleOrganisationEmailContext = async (organisationId: string) => {
   const branding = organisationGlobalSettingsToBranding(
     organisation.organisationGlobalSettings,
     organisation.id,
-    claims.flags.hidePoweredBy ?? !IS_BILLING_ENABLED(),
+    resolveHidePoweredBy(claims.flags),
   );
 
   const allowBrandedEmailColors = !IS_BILLING_ENABLED() || claims.flags.embedSigningWhiteLabel === true;
@@ -281,11 +282,7 @@ const handleTeamEmailContext = async (teamId: number) => {
 
   const teamSettings = extractDerivedTeamSettings(organisation.organisationGlobalSettings, team.teamGlobalSettings);
 
-  const branding = teamGlobalSettingsToBranding(
-    teamSettings,
-    teamId,
-    claims.flags.hidePoweredBy ?? !IS_BILLING_ENABLED(),
-  );
+  const branding = teamGlobalSettingsToBranding(teamSettings, teamId, resolveHidePoweredBy(claims.flags));
 
   const allowBrandedEmailColors = !IS_BILLING_ENABLED() || claims.flags.embedSigningWhiteLabel === true;
 

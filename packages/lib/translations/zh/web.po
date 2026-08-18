@@ -491,6 +491,16 @@ msgstr "{teamName} 已邀请您 {0}<0/>“{documentName}”"
 msgid "{teamName} has invited you to {action} {documentName}"
 msgstr "{teamName} 已邀请您 {action} {documentName}"
 
+#: apps/remix/app/components/general/document-signing/document-signing-page-view-v1.tsx
+#: apps/remix/app/components/general/envelope-signing/envelope-signing-complete-dialog.tsx
+msgid "{unavailableEmail} is no longer a recipient on this envelope."
+msgstr ""
+
+#: apps/remix/app/components/general/document-signing/document-signing-page-view-v1.tsx
+#: apps/remix/app/components/general/envelope-signing/envelope-signing-complete-dialog.tsx
+msgid "{unavailableEmail} is no longer a recipient on this envelope. The next available recipient ({fallbackEmail}) has been notified instead."
+msgstr ""
+
 #: packages/lib/utils/document-audit-logs.ts
 msgid "{user} added a field"
 msgstr "{user} 添加了一个字段"
@@ -1430,6 +1440,12 @@ msgstr "添加收件人"
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-recipient-form.tsx
 msgid "Add recipients to your document"
 msgstr "向文档添加收件人"
+
+#: apps/remix/app/components/general/envelope-editor/envelope-editor-fields-page.tsx
+#: apps/remix/app/components/general/envelope-editor/envelope-editor-upload-page.tsx
+#: apps/remix/app/components/general/envelope-editor/envelope-editor.tsx
+msgid "Add Signature Fields"
+msgstr ""
 
 #: apps/remix/app/components/embed/authoring/configure-document-recipients.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-recipient-form.tsx
@@ -4857,7 +4873,6 @@ msgstr "电子签名披露"
 
 #: apps/remix/app/components/dialogs/admin-user-create-dialog.tsx
 #: apps/remix/app/components/dialogs/ai-field-detection-dialog.tsx
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
 #: apps/remix/app/components/dialogs/email-transport-send-test-dialog.tsx
 #: apps/remix/app/components/dialogs/envelope-distribute-dialog.tsx
 #: apps/remix/app/components/dialogs/team-email-add-dialog.tsx
@@ -4875,6 +4890,7 @@ msgstr "电子签名披露"
 #: apps/remix/app/components/forms/signin.tsx
 #: apps/remix/app/components/general/direct-template/direct-template-configure-form.tsx
 #: apps/remix/app/components/general/document-signing/document-signing-email-field.tsx
+#: apps/remix/app/components/general/document-signing/next-signer-select.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-fields-drag-drop.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-recipient-form.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-recipient-form.tsx
@@ -5269,16 +5285,6 @@ msgstr "输入文本"
 #: apps/remix/app/components/dialogs/organisation-email-domain-create-dialog.tsx
 msgid "Enter the domain you want to use for sending emails (without http:// or www)"
 msgstr "输入您希望用于发送邮件的域名（不含 http:// 或 www）"
-
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
-#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
-msgid "Enter the next signer's email"
-msgstr "输入下一位签署人的电子邮件"
-
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
-#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
-msgid "Enter the next signer's name"
-msgstr "输入下一位签署人的姓名"
 
 #: apps/remix/app/components/general/document-signing/access-auth-2fa-form.tsx
 msgid "Enter verification code"
@@ -7251,7 +7257,6 @@ msgstr "N/A"
 
 #: apps/remix/app/components/dialogs/admin-user-create-dialog.tsx
 #: apps/remix/app/components/dialogs/ai-field-detection-dialog.tsx
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
 #: apps/remix/app/components/dialogs/folder-update-dialog.tsx
 #: apps/remix/app/components/dialogs/team-email-add-dialog.tsx
 #: apps/remix/app/components/dialogs/team-email-update-dialog.tsx
@@ -7262,6 +7267,7 @@ msgstr "N/A"
 #: apps/remix/app/components/forms/subscription-claim-form.tsx
 #: apps/remix/app/components/general/claim-account.tsx
 #: apps/remix/app/components/general/document-signing/document-signing-name-field.tsx
+#: apps/remix/app/components/general/document-signing/next-signer-select.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-fields-drag-drop.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-recipient-form.tsx
 #: apps/remix/app/components/tables/admin-claims-table.tsx
@@ -7353,6 +7359,10 @@ msgstr "下一步"
 #: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
 msgid "Next Field"
 msgstr "下一个字段"
+
+#: apps/remix/app/components/general/document-signing/next-signer-select.tsx
+msgid "Next Recipient"
+msgstr ""
 
 #: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
 msgid "Next Recipient Email"
@@ -9677,6 +9687,10 @@ msgstr "选择要添加到此组的成员"
 msgid "Select the members to include in this group"
 msgstr "选择要包含在此组中的成员"
 
+#: apps/remix/app/components/general/document-signing/next-signer-select.tsx
+msgid "Select the next signer"
+msgstr ""
+
 #: apps/remix/app/components/general/webhook-multiselect-combobox.tsx
 #: apps/remix/app/components/general/webhook-multiselect-combobox.tsx
 msgid "Select triggers"
@@ -9706,6 +9720,11 @@ msgstr "选中的项目已被移动。"
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-preview-page.tsx
 msgid "Selected Recipient"
 msgstr "选定收件人"
+
+#: apps/remix/app/components/general/document-signing/document-signing-page-view-v1.tsx
+#: apps/remix/app/components/general/envelope-signing/envelope-signing-complete-dialog.tsx
+msgid "Selected recipient is no longer available"
+msgstr ""
 
 #: apps/remix/app/components/dialogs/envelopes-bulk-delete-dialog.tsx
 msgid "Selected templates will be permanently deleted"
@@ -11222,12 +11241,6 @@ msgstr "以下签署人缺少签名字段："
 msgid "The following team has been deleted. You will no longer be able to access this team and its documents"
 msgstr "以下团队已被删除。您将无法再访问该团队及其文档"
 
-#. placeholder {0}: form.watch('name')
-#. placeholder {1}: form.watch('email')
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
-msgid "The next recipient to sign this document will be <0>{0}</0> (<1>{1}</1>)."
-msgstr "下一个需要签署此文档的收件人是<0>{0}</0>（<1>{1}</1>）。"
-
 #: apps/remix/app/routes/_authenticated+/o.$orgUrl.settings.sso.tsx
 msgid "The OpenID discovery endpoint URL for your provider"
 msgstr "您提供方的 OpenID 发现端点 URL"
@@ -12405,7 +12418,6 @@ msgstr "更新密码"
 msgid "Update profile"
 msgstr "更新资料"
 
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
 #: apps/remix/app/components/tables/admin-document-recipient-item-table.tsx
 msgid "Update Recipient"
 msgstr "更新收件人"

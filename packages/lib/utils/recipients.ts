@@ -141,6 +141,37 @@ type RecipientForDictation = {
   signingOrder: number | null;
 };
 
+type NextSigner = {
+  name: string;
+  email: string;
+};
+
+/**
+ * Returns the recipient that should be pre-selected when dictating the next
+ * signer. Prefers the provided default next signer (matched by email), falling
+ * back to the first pending recipient.
+ */
+export const getDefaultSelectedRecipient = <T extends { id: number; name: string; email: string }>(
+  pendingRecipients: T[],
+  defaultNextSigner?: NextSigner,
+): T | undefined => {
+  if (pendingRecipients.length === 0) {
+    return undefined;
+  }
+
+  if (defaultNextSigner) {
+    const matchedRecipient = pendingRecipients.find(
+      (recipient) => recipient.email.toLowerCase() === defaultNextSigner.email.toLowerCase(),
+    );
+
+    if (matchedRecipient) {
+      return matchedRecipient;
+    }
+  }
+
+  return pendingRecipients[0];
+};
+
 /**
  * Returns unsigned, non-CC recipients excluding the current signer, sorted by signing order.
  * Used when dictating who should sign next.

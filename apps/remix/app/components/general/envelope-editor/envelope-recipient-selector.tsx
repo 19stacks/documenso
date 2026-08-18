@@ -20,7 +20,7 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import type { Field } from '@prisma/client';
 import { RecipientRole, SendStatus } from '@prisma/client';
 import { Check, ChevronsUpDown, Info } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { sortBy } from 'remeda';
 
 export interface EnvelopeRecipientSelectorProps {
@@ -120,6 +120,11 @@ export const EnvelopeRecipientSelectorCommand = ({
     return recipientsByRole;
   }, [recipients]);
 
+  const recipientIndexById = useMemo(
+    () => new Map(recipients.map((recipient, index) => [recipient.id, index])),
+    [recipients],
+  );
+
   const recipientsByRoleToDisplay = useCallback(() => {
     return Object.entries(recipientsByRole())
       .filter(
@@ -177,7 +182,7 @@ export const EnvelopeRecipientSelectorCommand = ({
                 key={recipient.id}
                 className={cn(
                   'px-2 last:mb-1 [&:not(:first-child)]:mt-1',
-                  getRecipientColorStyles(recipients.findIndex((r) => r.id === recipient.id)).comboBoxItem,
+                  getRecipientColorStyles(recipientIndexById.get(recipient.id) ?? -1).comboBoxItem,
                   {
                     'text-muted-foreground': recipient.sendStatus === SendStatus.SENT,
                     'cursor-not-allowed': isRecipientDisabled(recipient.id),

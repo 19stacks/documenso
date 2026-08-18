@@ -15,7 +15,7 @@ export const addOrganisationMember = async ({
   userId,
   organisationRole = OrganisationMemberRole.MEMBER,
 }: AddOrganisationMemberOptions) => {
-  const [user, organisation] = await Promise.all([
+  const [user, organisation, existingMember] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId } }),
     prisma.organisation.findUnique({
       where: { id: organisationId },
@@ -24,6 +24,9 @@ export const addOrganisationMember = async ({
           where: { type: OrganisationGroupType.INTERNAL_ORGANISATION },
         },
       },
+    }),
+    prisma.organisationMember.findFirst({
+      where: { userId, organisationId },
     }),
   ]);
 
@@ -35,10 +38,6 @@ export const addOrganisationMember = async ({
     throw new AppError(AppErrorCode.NOT_FOUND, { message: 'Organisation not found' });
   }
 
-  const existingMember = await prisma.organisationMember.findFirst({
-    where: { userId, organisationId },
-  });
-
   if (existingMember) {
     return {
       organisationMemberId: existingMember.id,
@@ -48,16 +47,12 @@ export const addOrganisationMember = async ({
     };
   }
 
-  await addUserToOrganisation({
+  const organisationMember = await addUserToOrganisation({
     userId,
     organisationId,
     organisationGroups: organisation.groups,
     organisationMemberRole: organisationRole,
     bypassEmail: true,
-  });
-
-  const organisationMember = await prisma.organisationMember.findFirstOrThrow({
-    where: { userId, organisationId },
   });
 
   return {

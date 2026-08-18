@@ -491,6 +491,16 @@ msgstr "{teamName}이(가) 문서 \"{documentName}\"에 대해 귀하께 {0}하�
 msgid "{teamName} has invited you to {action} {documentName}"
 msgstr "{teamName}이(가) 귀하께 {action} {documentName} 문서를 요청했습니다."
 
+#: apps/remix/app/components/general/document-signing/document-signing-page-view-v1.tsx
+#: apps/remix/app/components/general/envelope-signing/envelope-signing-complete-dialog.tsx
+msgid "{unavailableEmail} is no longer a recipient on this envelope."
+msgstr ""
+
+#: apps/remix/app/components/general/document-signing/document-signing-page-view-v1.tsx
+#: apps/remix/app/components/general/envelope-signing/envelope-signing-complete-dialog.tsx
+msgid "{unavailableEmail} is no longer a recipient on this envelope. The next available recipient ({fallbackEmail}) has been notified instead."
+msgstr ""
+
 #: packages/lib/utils/document-audit-logs.ts
 msgid "{user} added a field"
 msgstr "{user}님이 필드를 추가했습니다."
@@ -1430,6 +1440,12 @@ msgstr "수신자 추가"
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-recipient-form.tsx
 msgid "Add recipients to your document"
 msgstr "문서에 수신자를 추가하세요"
+
+#: apps/remix/app/components/general/envelope-editor/envelope-editor-fields-page.tsx
+#: apps/remix/app/components/general/envelope-editor/envelope-editor-upload-page.tsx
+#: apps/remix/app/components/general/envelope-editor/envelope-editor.tsx
+msgid "Add Signature Fields"
+msgstr ""
 
 #: apps/remix/app/components/embed/authoring/configure-document-recipients.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-recipient-form.tsx
@@ -4857,7 +4873,6 @@ msgstr "전자 서명 고지"
 
 #: apps/remix/app/components/dialogs/admin-user-create-dialog.tsx
 #: apps/remix/app/components/dialogs/ai-field-detection-dialog.tsx
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
 #: apps/remix/app/components/dialogs/email-transport-send-test-dialog.tsx
 #: apps/remix/app/components/dialogs/envelope-distribute-dialog.tsx
 #: apps/remix/app/components/dialogs/team-email-add-dialog.tsx
@@ -4875,6 +4890,7 @@ msgstr "전자 서명 고지"
 #: apps/remix/app/components/forms/signin.tsx
 #: apps/remix/app/components/general/direct-template/direct-template-configure-form.tsx
 #: apps/remix/app/components/general/document-signing/document-signing-email-field.tsx
+#: apps/remix/app/components/general/document-signing/next-signer-select.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-fields-drag-drop.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-recipient-form.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-recipient-form.tsx
@@ -5269,16 +5285,6 @@ msgstr "텍스트를 입력하세요"
 #: apps/remix/app/components/dialogs/organisation-email-domain-create-dialog.tsx
 msgid "Enter the domain you want to use for sending emails (without http:// or www)"
 msgstr "이메일 발신에 사용할 도메인을 입력하세요( http:// 또는 www 제외)."
-
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
-#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
-msgid "Enter the next signer's email"
-msgstr "다음 서명자의 이메일을 입력하세요"
-
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
-#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
-msgid "Enter the next signer's name"
-msgstr "다음 서명자의 이름을 입력하세요"
 
 #: apps/remix/app/components/general/document-signing/access-auth-2fa-form.tsx
 msgid "Enter verification code"
@@ -7251,7 +7257,6 @@ msgstr "해당 없음"
 
 #: apps/remix/app/components/dialogs/admin-user-create-dialog.tsx
 #: apps/remix/app/components/dialogs/ai-field-detection-dialog.tsx
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
 #: apps/remix/app/components/dialogs/folder-update-dialog.tsx
 #: apps/remix/app/components/dialogs/team-email-add-dialog.tsx
 #: apps/remix/app/components/dialogs/team-email-update-dialog.tsx
@@ -7262,6 +7267,7 @@ msgstr "해당 없음"
 #: apps/remix/app/components/forms/subscription-claim-form.tsx
 #: apps/remix/app/components/general/claim-account.tsx
 #: apps/remix/app/components/general/document-signing/document-signing-name-field.tsx
+#: apps/remix/app/components/general/document-signing/next-signer-select.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-fields-drag-drop.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-recipient-form.tsx
 #: apps/remix/app/components/tables/admin-claims-table.tsx
@@ -7353,6 +7359,10 @@ msgstr "다음"
 #: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
 msgid "Next Field"
 msgstr "다음 필드"
+
+#: apps/remix/app/components/general/document-signing/next-signer-select.tsx
+msgid "Next Recipient"
+msgstr ""
 
 #: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
 msgid "Next Recipient Email"
@@ -9677,6 +9687,10 @@ msgstr "이 그룹에 추가할 구성원을 선택하세요."
 msgid "Select the members to include in this group"
 msgstr "이 그룹에 포함할 구성원을 선택하세요."
 
+#: apps/remix/app/components/general/document-signing/next-signer-select.tsx
+msgid "Select the next signer"
+msgstr ""
+
 #: apps/remix/app/components/general/webhook-multiselect-combobox.tsx
 #: apps/remix/app/components/general/webhook-multiselect-combobox.tsx
 msgid "Select triggers"
@@ -9706,6 +9720,11 @@ msgstr "선택한 항목이 이동되었습니다."
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-preview-page.tsx
 msgid "Selected Recipient"
 msgstr "선택된 수신자"
+
+#: apps/remix/app/components/general/document-signing/document-signing-page-view-v1.tsx
+#: apps/remix/app/components/general/envelope-signing/envelope-signing-complete-dialog.tsx
+msgid "Selected recipient is no longer available"
+msgstr ""
 
 #: apps/remix/app/components/dialogs/envelopes-bulk-delete-dialog.tsx
 msgid "Selected templates will be permanently deleted"
@@ -11222,12 +11241,6 @@ msgstr "다음 서명자에게는 서명 필드가 없습니다:"
 msgid "The following team has been deleted. You will no longer be able to access this team and its documents"
 msgstr "다음 팀이 삭제되었습니다. 더 이상 이 팀과 그 문서에 접근할 수 없습니다."
 
-#. placeholder {0}: form.watch('name')
-#. placeholder {1}: form.watch('email')
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
-msgid "The next recipient to sign this document will be <0>{0}</0> (<1>{1}</1>)."
-msgstr "이 문서의 다음 서명자는 <0>{0}</0> (<1>{1}</1>)입니다."
-
 #: apps/remix/app/routes/_authenticated+/o.$orgUrl.settings.sso.tsx
 msgid "The OpenID discovery endpoint URL for your provider"
 msgstr "제공자의 OpenID 검색 엔드포인트 URL입니다"
@@ -12405,7 +12418,6 @@ msgstr "비밀번호 업데이트"
 msgid "Update profile"
 msgstr "프로필 업데이트"
 
-#: apps/remix/app/components/dialogs/assistant-confirmation-dialog.tsx
 #: apps/remix/app/components/tables/admin-document-recipient-item-table.tsx
 msgid "Update Recipient"
 msgstr "수신자 업데이트"

@@ -6,11 +6,11 @@ import { FieldType } from '@prisma/client';
 import { prop, sortBy } from 'remeda';
 import { match } from 'ts-pattern';
 
-import { IS_BILLING_ENABLED } from '../../constants/app';
 import { ZSupportedLanguageCodeSchema } from '../../constants/i18n';
 import type { TDocumentAuditLogBaseSchema } from '../../types/document-audit-logs';
 import { extractDocumentAuthMethods } from '../../utils/document-auth';
 import { getTranslations } from '../../utils/i18n';
+import { resolveHidePoweredBy } from '../../utils/resolve-hide-powered-by';
 import { getDocumentCertificateAuditLogs } from '../document/get-document-certificate-audit-logs';
 import { getOrganisationClaimByTeamId } from '../organisation/get-organisation-claims';
 import { renderCertificate } from './render-certificate';
@@ -139,7 +139,7 @@ export const generateCertificatePdf = async (options: GenerateCertificatePdfOpti
     envelopeOwner,
     envelopeId: envelope.id,
     qrToken: envelope.qrToken,
-    hidePoweredBy: organisationClaim.flags.hidePoweredBy ?? !IS_BILLING_ENABLED(),
+    hidePoweredBy: resolveHidePoweredBy(organisationClaim.flags),
     pageWidth,
     pageHeight,
     i18n,

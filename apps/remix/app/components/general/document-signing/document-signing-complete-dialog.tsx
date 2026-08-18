@@ -1,6 +1,7 @@
 import { AppError, AppErrorCode } from '@documenso/lib/errors/app-error';
 import { type TRecipientAccessAuth, ZDocumentAccessAuthSchema } from '@documenso/lib/types/document-auth';
 import { fieldsContainUnsignedRequiredField } from '@documenso/lib/utils/advanced-fields-helpers';
+import { getDefaultSelectedRecipient } from '@documenso/lib/utils/recipients';
 import { zEmail } from '@documenso/lib/utils/zod';
 import { Button } from '@documenso/ui/primitives/button';
 import {
@@ -14,7 +15,6 @@ import {
 } from '@documenso/ui/primitives/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@documenso/ui/primitives/form/form';
 import { Input } from '@documenso/ui/primitives/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@documenso/ui/primitives/select';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Trans, useLingui } from '@lingui/react/macro';
 import type { Field, Recipient } from '@prisma/client';
@@ -27,8 +27,8 @@ import { z } from 'zod';
 import { useEmbedSigningContext } from '~/components/embed/embed-signing-context';
 import { AccessAuth2FAForm } from '~/components/general/document-signing/access-auth-2fa-form';
 import { DocumentSigningDisclosure } from '~/components/general/document-signing/document-signing-disclosure';
-
 import { useRequiredDocumentSigningAuthContext } from './document-signing-auth-provider';
+import { NextSignerSelect } from './next-signer-select';
 
 export type PendingDictateRecipient = {
   id: number;
@@ -64,7 +64,7 @@ export type DocumentSigningCompleteDialogProps = {
 };
 
 const ZNextSignerFormSchema = z.object({
-  recipientId: z.number({ required_error: 'Please select a recipient' }),
+  recipientId: z.number({ required_error: 'Please select a recipient' }).int().positive(),
   name: z.string().min(1, 'Name is required'),
   email: zEmail('Invalid email address'),
   accessAuthOptions: ZDocumentAccessAuthSchema.optional(),
@@ -78,27 +78,6 @@ const ZDirectRecipientFormSchema = z.object({
 });
 
 type TDirectRecipientFormSchema = z.infer<typeof ZDirectRecipientFormSchema>;
-
-const getDefaultSelectedRecipient = (
-  pendingRecipients: PendingDictateRecipient[],
-  defaultNextSigner?: { name: string; email: string },
-) => {
-  if (pendingRecipients.length === 0) {
-    return undefined;
-  }
-
-  if (defaultNextSigner) {
-    const matchedRecipient = pendingRecipients.find(
-      (recipient) => recipient.email.toLowerCase() === defaultNextSigner.email.toLowerCase(),
-    );
-
-    if (matchedRecipient) {
-      return matchedRecipient;
-    }
-  }
-
-  return pendingRecipients[0];
-};
 
 export const DocumentSigningCompleteDialog = ({
   isSubmitting,
@@ -158,21 +137,16 @@ export const DocumentSigningCompleteDialog = ({
     [derivedRecipientAccessAuth],
   );
 
-  const selectedName = form.watch('name');
-  const selectedEmail = form.watch('email');
-
   const handleOpenChange = (open: boolean) => {
     if (form.formState.isSubmitting || !isComplete) {
       return;
     }
 
     if (open) {
-      const selectedRecipient = getDefaultSelectedRecipient(pendingRecipients, defaultNextSigner);
-
       form.reset({
-        recipientId: selectedRecipient?.id,
-        name: selectedRecipient?.name ?? '',
-        email: selectedRecipient?.email ?? '',
+        recipientId: defaultSelectedRecipient?.id,
+        name: defaultSelectedRecipient?.name ?? '',
+        email: defaultSelectedRecipient?.email ?? '',
       });
     }
 
@@ -348,69 +322,11 @@ export const DocumentSigningCompleteDialog = ({
               <form onSubmit={form.handleSubmit(onFormSubmit)}>
                 {showDictateNextSigner && (
                   <div className="mb-4 flex flex-col gap-4">
-                    <FormField
-                      control={form.control}
-                      name="recipientId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            <Trans>Next Recipient</Trans>
-                          </FormLabel>
-                          <FormControl>
-                            <Select
-                              value={field.value ? String(field.value) : undefined}
-                              onValueChange={(value) => {
-                                const recipientId = Number(value);
-                                const selectedRecipient = pendingRecipients.find(
-                                  (pendingRecipient) => pendingRecipient.id === recipientId,
-                                );
-
-                                field.onChange(recipientId);
-
-                                if (selectedRecipient) {
-                                  form.setValue('name', selectedRecipient.name);
-                                  form.setValue('email', selectedRecipient.email);
-                                }
-                              }}
-                            >
-                              <SelectTrigger className="mt-2">
-                                <SelectValue placeholder={t`Select the next signer`} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {pendingRecipients.map((pendingRecipient) => (
-                                  <SelectItem key={pendingRecipient.id} value={String(pendingRecipient.id)}>
-                                    {pendingRecipient.name
-                                      ? `${pendingRecipient.name} (${pendingRecipient.email})`
-                                      : pendingRecipient.email}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                    <NextSignerSelect
+                      pendingRecipients={pendingRecipients}
+                      nameLabel={<Trans>Next Recipient Name</Trans>}
+                      emailLabel={<Trans>Next Recipient Email</Trans>}
                     />
-
-                    <div className="flex flex-col gap-4 md:flex-row">
-                      <div className="flex-1">
-                        <p className="font-medium text-sm leading-none">
-                          <Trans>Next Recipient Name</Trans>
-                        </p>
-                        <p className="mt-2 rounded-md border border-input bg-muted/40 px-3 py-2 text-muted-foreground text-sm">
-                          {selectedName || '—'}
-                        </p>
-                      </div>
-
-                      <div className="flex-1">
-                        <p className="font-medium text-sm leading-none">
-                          <Trans>Next Recipient Email</Trans>
-                        </p>
-                        <p className="mt-2 rounded-md border border-input bg-muted/40 px-3 py-2 text-muted-foreground text-sm">
-                          {selectedEmail || '—'}
-                        </p>
-                      </div>
-                    </div>
                   </div>
                 )}
 

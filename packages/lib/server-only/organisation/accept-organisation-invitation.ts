@@ -107,7 +107,7 @@ export const addUserToOrganisation = async ({
     });
   }
 
-  await prisma.organisationMember.create({
+  const organisationMember = await prisma.organisationMember.create({
     data: {
       id: generateDatabaseId('member'),
       userId,
@@ -130,4 +130,6 @@ export const addUserToOrganisation = async ({
       },
     });
   }
+
+  return organisationMember;
 };

@@ -26,9 +26,6 @@ export const appMiddleware = async (c: Context, next: Next) => {
   }
 
   if (env('NEXT_PUBLIC_DISABLE_UI') === 'true') {
-    const allowedPathRegex =
-      /^\/(_recipient\/|d\/|embed\/|share\/|sign\/|_share\/|_redirects\/|_internal\/|_profile\/|fonts\/|static\/|articles\/|report\/|signature-disclosure(\/|\.data|$))/;
-
     if (!allowedPathRegex.test(path)) {
       return new Response(null, { status: 404 });
     }
@@ -74,3 +71,7 @@ export const appMiddleware = async (c: Context, next: Next) => {
 // The ^ ensures matching from the beginning of the string
 // The | acts as OR operator between different patterns
 const nonPagePathRegex = /^(\/api\/|\/ingest\/|\/__manifest|\/assets\/|\/apple-.*|\/favicon.*)/;
+
+// Paths that are still served when the UI is disabled (API-only mode).
+const allowedPathRegex =
+  /^\/(_recipient\/|d\/|embed\/|share\/|sign\/|_share\/|_redirects\/|_internal\/|_profile\/|fonts\/|static\/|articles\/|report\/|signature-disclosure(\/|\.data|$))/;

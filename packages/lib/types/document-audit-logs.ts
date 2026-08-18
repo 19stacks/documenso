@@ -87,7 +87,14 @@ export const ZDocumentMetaDiffTypeSchema = z.enum([
 ]);
 
 export const ZFieldDiffTypeSchema = z.enum(['DIMENSION', 'POSITION']);
-export const ZRecipientDiffTypeSchema = z.enum(['NAME', 'ROLE', 'EMAIL', 'ACCESS_AUTH', 'ACTION_AUTH']);
+export const ZRecipientDiffTypeSchema = z.enum([
+  'NAME',
+  'ROLE',
+  'EMAIL',
+  'ACCESS_AUTH',
+  'ACTION_AUTH',
+  'SIGNING_ORDER',
+]);
 
 export const DOCUMENT_AUDIT_LOG_TYPE = ZDocumentAuditLogTypeSchema.Enum;
 export const DOCUMENT_EMAIL_TYPE = ZDocumentAuditLogEmailTypeSchema.Enum;
@@ -168,12 +175,19 @@ export const ZRecipientDiffEmailSchema = ZGenericFromToSchema.extend({
   type: z.literal(RECIPIENT_DIFF_TYPE.EMAIL),
 });
 
+export const ZRecipientDiffSigningOrderSchema = z.object({
+  type: z.literal(RECIPIENT_DIFF_TYPE.SIGNING_ORDER),
+  from: z.number().nullable(),
+  to: z.number().nullable(),
+});
+
 export const ZDocumentAuditLogRecipientDiffSchema = z.discriminatedUnion('type', [
   ZRecipientDiffActionAuthSchema,
   ZRecipientDiffAccessAuthSchema,
   ZRecipientDiffNameSchema,
   ZRecipientDiffRoleSchema,
   ZRecipientDiffEmailSchema,
+  ZRecipientDiffSigningOrderSchema,
 ]);
 
 const ZBaseFieldEventDataSchema = z.object({
