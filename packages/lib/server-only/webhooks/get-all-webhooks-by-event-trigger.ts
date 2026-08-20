@@ -6,7 +6,7 @@ import { buildTeamWhereQuery } from '../../utils/teams';
 export type GetAllWebhooksByEventTriggerOptions = {
   event: WebhookTriggerEvents;
   userId: number;
-  teamId: number;
+  teamId?: number;
 };
 
 export const getAllWebhooksByEventTrigger = async ({ event, userId, teamId }: GetAllWebhooksByEventTriggerOptions) => {

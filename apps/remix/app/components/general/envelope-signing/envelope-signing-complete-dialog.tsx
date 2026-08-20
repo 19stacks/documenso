@@ -118,6 +118,13 @@ export const EnvelopeSignerCompleteDialog = () => {
             : t`${unavailableEmail} is no longer a recipient on this envelope.`,
           variant: 'destructive',
         });
+      } else if (result.nextRecipientNotReady) {
+        const email = result.nextRecipientNotReady.email;
+        toast({
+          title: t`Next recipient not ready`,
+          description: t`The next recipient (${email}) cannot be notified yet as they require signature fields to be assigned to them.`,
+          variant: 'destructive',
+        });
       }
 
       analytics.capture('App: Recipient has completed signing', {

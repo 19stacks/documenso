@@ -23,7 +23,6 @@ import { Checkbox } from '@documenso/ui/primitives/checkbox';
 import { SigningOrderConfirmation } from '@documenso/ui/primitives/document-flow/signing-order-confirmation';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@documenso/ui/primitives/form/form';
 import { FormErrorMessage } from '@documenso/ui/primitives/form/form-error-message';
-import { Input } from '@documenso/ui/primitives/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@documenso/ui/primitives/tooltip';
 import { useToast } from '@documenso/ui/primitives/use-toast';
 import { DragDropContext, Draggable, Droppable, type DropResult, type SensorAPI } from '@hello-pangea/dnd';
@@ -32,7 +31,7 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import { DocumentSigningOrder, EnvelopeType, RecipientRole, SendStatus } from '@prisma/client';
 import { motion } from 'framer-motion';
 import { GripVerticalIcon, HelpCircleIcon, PlusIcon, SparklesIcon, TrashIcon } from 'lucide-react';
-import { type ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFieldArray, useWatch } from 'react-hook-form';
 import { useRevalidator, useSearchParams } from 'react-router';
 import { isDeepEqual } from 'remeda';
@@ -40,86 +39,7 @@ import { isDeepEqual } from 'remeda';
 import { AiFeaturesEnableDialog } from '~/components/dialogs/ai-features-enable-dialog';
 import { AiRecipientDetectionDialog } from '~/components/dialogs/ai-recipient-detection-dialog';
 import { useCurrentTeam } from '~/providers/team';
-
-type SigningOrderInputProps = {
-  value: number | undefined;
-  index: number;
-  disabled?: boolean;
-  onCommit: (index: number, order: string) => void;
-  onRestore: (index: number) => void;
-};
-
-/**
- * Local-state order input so clearing/rewriting digits is not blocked by RHF
- * (undefined values) or list reordering while the user is still typing.
- */
-const SigningOrderInput = ({
-  value,
-  index,
-  disabled,
-  onCommit,
-  onRestore,
-  ...props
-}: SigningOrderInputProps & ComponentPropsWithoutRef<'input'>) => {
-  const [text, setText] = useState(() => (value != null ? String(value) : ''));
-  const isFocusedRef = useRef(false);
-
-  useEffect(() => {
-    if (!isFocusedRef.current) {
-      setText(value != null ? String(value) : '');
-    }
-  }, [value]);
-
-  return (
-    <Input
-      {...props}
-      type="text"
-      inputMode="numeric"
-      pattern="[0-9]*"
-      data-testid="signing-order-input"
-      className={cn(
-        'w-10 text-center',
-        '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
-        props.className,
-      )}
-      disabled={disabled}
-      value={text}
-      onFocus={(event) => {
-        isFocusedRef.current = true;
-        props.onFocus?.(event);
-      }}
-      onKeyDown={(event) => {
-        // Stop drag-and-drop / parent handlers from swallowing edit keys.
-        event.stopPropagation();
-        props.onKeyDown?.(event);
-      }}
-      onChange={(event) => {
-        event.stopPropagation();
-
-        const rawValue = event.target.value;
-
-        if (rawValue === '' || /^\d+$/.test(rawValue)) {
-          setText(rawValue);
-        }
-      }}
-      onBlur={(event) => {
-        isFocusedRef.current = false;
-
-        const trimmed = text.trim();
-        const parsedOrder = Number(trimmed);
-
-        if (!trimmed || !Number.isInteger(parsedOrder) || parsedOrder < 1) {
-          setText(value != null ? String(value) : String(index + 1));
-          onRestore(index);
-        } else {
-          onCommit(index, trimmed);
-        }
-
-        props.onBlur?.(event);
-      }}
-    />
-  );
-};
+import { SigningOrderInput } from './envelope-editor-signing-order-input';
 
 export const EnvelopeEditorRecipientForm = () => {
   const { envelope, setRecipientsDebounced, updateEnvelope, editorRecipients, isEmbedded, editorConfig } =
@@ -980,6 +900,7 @@ export const EnvelopeEditorRecipientForm = () => {
                                             setRecipientSearchQuery(query);
                                           }}
                                           loading={isLoading}
+                                          data-testid="signer-email-input"
                                           maxLength={254}
                                         />
                                       </FormControl>

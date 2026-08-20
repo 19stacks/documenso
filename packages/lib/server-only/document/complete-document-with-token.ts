@@ -25,6 +25,7 @@ import { mapEnvelopeToWebhookDocumentPayload, ZWebhookDocumentSchema } from '../
 import { extractDocumentAuthMethods } from '../../utils/document-auth';
 import type { EnvelopeIdOptions } from '../../utils/envelope';
 import { mapSecondaryIdToDocumentId, unsafeBuildEnvelopeIdQuery } from '../../utils/envelope';
+import { logger } from '../../utils/logger';
 import { assertRecipientNotExpired } from '../../utils/recipients';
 import { getIsRecipientsTurnToSign } from '../recipient/get-is-recipient-turn';
 import { isRecipientReadyToSign } from '../recipient/is-recipient-ready-to-sign';
@@ -57,6 +58,11 @@ export type CompleteDocumentWithTokenResult = {
     name: string;
   };
   notifiedNextRecipient?: {
+    id: number;
+    email: string;
+    name: string;
+  };
+  nextRecipientNotReady?: {
     id: number;
     email: string;
     name: string;
@@ -402,6 +408,7 @@ export const completeDocumentWithToken = async ({
 
   let dictatedNextSignerUnavailable: CompleteDocumentWithTokenResult['dictatedNextSignerUnavailable'];
   let notifiedNextRecipient: CompleteDocumentWithTokenResult['notifiedNextRecipient'];
+  let nextRecipientNotReady: CompleteDocumentWithTokenResult['nextRecipientNotReady'];
 
   if (pendingRecipients.length > 0) {
     await jobs.triggerJob({
@@ -449,46 +456,57 @@ export const completeDocumentWithToken = async ({
             const selectedSigningOrder = selectedRecipient.signingOrder;
             const immediateNextSigningOrder = immediateNextRecipient.signingOrder;
 
-            await tx.recipient.update({
-              where: { id: selectedRecipient.id },
-              data: {
-                signingOrder: immediateNextSigningOrder,
-                sendStatus: SendStatus.SENT,
-                sentAt: new Date(),
-              },
-            });
-
-            await tx.recipient.update({
-              where: { id: immediateNextRecipient.id },
-              data: {
-                signingOrder: selectedSigningOrder,
-              },
-            });
-
-            await tx.documentAuditLog.create({
-              data: createDocumentAuditLogData({
-                type: DOCUMENT_AUDIT_LOG_TYPE.RECIPIENT_UPDATED,
-                envelopeId: envelope.id,
-                user: {
-                  name: recipientName,
-                  email: recipientEmail,
-                },
-                requestMetadata,
+            if (selectedSigningOrder !== null && immediateNextSigningOrder !== null) {
+              await tx.recipient.update({
+                where: { id: selectedRecipient.id },
                 data: {
-                  recipientEmail: selectedRecipient.email,
-                  recipientName: selectedRecipient.name,
-                  recipientId: selectedRecipient.id,
-                  recipientRole: selectedRecipient.role,
-                  changes: [
-                    {
-                      type: RECIPIENT_DIFF_TYPE.SIGNING_ORDER,
-                      from: selectedSigningOrder,
-                      to: immediateNextSigningOrder,
-                    },
-                  ],
+                  signingOrder: immediateNextSigningOrder,
+                  sendStatus: SendStatus.SENT,
+                  sentAt: new Date(),
                 },
-              }),
-            });
+              });
+
+              await tx.recipient.update({
+                where: { id: immediateNextRecipient.id },
+                data: {
+                  signingOrder: selectedSigningOrder,
+                },
+              });
+
+              await tx.documentAuditLog.create({
+                data: createDocumentAuditLogData({
+                  type: DOCUMENT_AUDIT_LOG_TYPE.RECIPIENT_UPDATED,
+                  envelopeId: envelope.id,
+                  user: {
+                    name: recipientName,
+                    email: recipientEmail,
+                  },
+                  requestMetadata,
+                  data: {
+                    recipientEmail: selectedRecipient.email,
+                    recipientName: selectedRecipient.name,
+                    recipientId: selectedRecipient.id,
+                    recipientRole: selectedRecipient.role,
+                    changes: [
+                      {
+                        type: RECIPIENT_DIFF_TYPE.SIGNING_ORDER,
+                        from: selectedSigningOrder,
+                        to: immediateNextSigningOrder,
+                      },
+                    ],
+                  },
+                }),
+              });
+            } else {
+              // Fallback if null, just send to the selected recipient without swapping
+              await tx.recipient.update({
+                where: { id: selectedRecipient.id },
+                data: {
+                  sendStatus: SendStatus.SENT,
+                  sentAt: new Date(),
+                },
+              });
+            }
           } else {
             await tx.recipient.update({
               where: { id: immediateNextRecipient.id },
@@ -497,6 +515,36 @@ export const completeDocumentWithToken = async ({
                 sentAt: new Date(),
               },
             });
+
+            // Audit the fallback when the dictated signer is no longer a pending
+            // recipient, so the audit trail shows why the immediate next recipient
+            // was notified instead of the dictated signer.
+            if (dictatedNextSignerUnavailable) {
+              await tx.documentAuditLog.create({
+                data: createDocumentAuditLogData({
+                  type: DOCUMENT_AUDIT_LOG_TYPE.RECIPIENT_UPDATED,
+                  envelopeId: envelope.id,
+                  user: {
+                    name: recipientName,
+                    email: recipientEmail,
+                  },
+                  requestMetadata,
+                  data: {
+                    recipientEmail: immediateNextRecipient.email,
+                    recipientName: immediateNextRecipient.name,
+                    recipientId: immediateNextRecipient.id,
+                    recipientRole: immediateNextRecipient.role,
+                    changes: [
+                      {
+                        type: RECIPIENT_DIFF_TYPE.DICTATED_SIGNER_UNAVAILABLE,
+                        dictatedSignerEmail: dictatedNextSignerUnavailable.email,
+                        dictatedSignerName: dictatedNextSignerUnavailable.name,
+                      },
+                    ],
+                  },
+                }),
+              });
+            }
           }
         });
 
@@ -514,6 +562,19 @@ export const completeDocumentWithToken = async ({
             recipientId: nextRecipientToNotify.id,
             requestMetadata,
           },
+        });
+      } else {
+        nextRecipientNotReady = {
+          id: nextRecipientToNotify.id,
+          email: nextRecipientToNotify.email,
+          name: nextRecipientToNotify.name,
+        };
+
+        logger.warn({
+          msg: 'Skipped notifying next signer: recipient has no signature fields to sign',
+          envelopeId: envelope.id,
+          recipientId: nextRecipientToNotify.id,
+          recipientEmail: nextRecipientToNotify.email,
         });
       }
     }
@@ -561,5 +622,6 @@ export const completeDocumentWithToken = async ({
   return {
     dictatedNextSignerUnavailable,
     notifiedNextRecipient,
+    nextRecipientNotReady,
   };
 };

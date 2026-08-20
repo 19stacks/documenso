@@ -1,7 +1,6 @@
 import { prisma } from '@documenso/prisma';
-import { FieldType, RecipientRole } from '@prisma/client';
-
-const SIGNATURE_FIELD_TYPES = [FieldType.SIGNATURE, FieldType.FREE_SIGNATURE] as const;
+import { SignatureFieldTypes } from '@documenso/prisma/guards/is-signature-field';
+import { RecipientRole } from '@prisma/client';
 
 /**
  * Whether a recipient is ready to be notified/advanced for signing.
@@ -24,7 +23,7 @@ export const isRecipientReadyToSign = async (
     where: {
       envelopeId,
       recipientId: recipient.id,
-      type: { in: [...SIGNATURE_FIELD_TYPES] },
+      type: { in: [...SignatureFieldTypes] },
     },
   });
 

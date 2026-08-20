@@ -324,6 +324,8 @@ export const DocumentSigningCompleteDialog = ({
                   <div className="mb-4 flex flex-col gap-4">
                     <NextSignerSelect
                       pendingRecipients={pendingRecipients}
+                      control={form.control}
+                      setValue={form.setValue}
                       nameLabel={<Trans>Next Recipient Name</Trans>}
                       emailLabel={<Trans>Next Recipient Email</Trans>}
                     />

@@ -1,6 +1,6 @@
 import { FieldType } from '@prisma/client';
 
-const SignatureFieldTypes = [FieldType.SIGNATURE, FieldType.FREE_SIGNATURE] as const;
+export const SignatureFieldTypes = [FieldType.SIGNATURE, FieldType.FREE_SIGNATURE] as const;
 
 type SignatureFieldType = (typeof SignatureFieldTypes)[number];
 

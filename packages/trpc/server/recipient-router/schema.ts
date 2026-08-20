@@ -202,6 +202,13 @@ export const ZCompleteDocumentWithTokenResponseSchema = z.discriminatedUnion('st
         name: z.string(),
       })
       .optional(),
+    nextRecipientNotReady: z
+      .object({
+        id: z.number(),
+        email: z.string(),
+        name: z.string(),
+      })
+      .optional(),
   }),
 ]);
 

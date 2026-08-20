@@ -11,6 +11,7 @@ import { putPdfFileServerSide } from '@documenso/lib/universal/upload/put-file.s
 import { createDocumentAuditLogData } from '@documenso/lib/utils/document-audit-logs';
 import { extractDocumentAuthMethods } from '@documenso/lib/utils/document-auth';
 import { mapSecondaryIdToDocumentId } from '@documenso/lib/utils/envelope';
+import { logger } from '@documenso/lib/utils/logger';
 import { prisma } from '@documenso/prisma';
 import { PDF } from '@libpdf/core';
 import {
@@ -506,6 +507,12 @@ export const executeTspSign = async (opts: ExecuteTspSignOptions): Promise<Execu
           recipientId: nextRecipient.id,
           requestMetadata,
         },
+      });
+    } else {
+      logger.warn({
+        msg: 'Skipped notifying next signer after TSP signing: recipient has no signature fields to sign',
+        envelopeId: envelope.id,
+        recipientId: nextRecipient.id,
       });
     }
   }

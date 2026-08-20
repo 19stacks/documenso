@@ -695,45 +695,47 @@ export const createDocumentFromDirectTemplate = async ({
           const selectedSigningOrder = selectedRecipient.signingOrder;
           const immediateNextSigningOrder = immediateNextRecipient.signingOrder;
 
-          await tx.recipient.update({
-            where: { id: selectedRecipient.id },
-            data: {
-              signingOrder: immediateNextSigningOrder,
-            },
-          });
-
-          await tx.recipient.update({
-            where: { id: immediateNextRecipient.id },
-            data: {
-              signingOrder: selectedSigningOrder,
-            },
-          });
-
-          await tx.documentAuditLog.create({
-            data: createDocumentAuditLogData({
-              type: DOCUMENT_AUDIT_LOG_TYPE.RECIPIENT_UPDATED,
-              envelopeId: createdEnvelope.id,
-              user: {
-                id: user?.id,
-                name: user?.name,
-                email: directRecipientEmail,
-              },
-              metadata: requestMetadata,
+          if (selectedSigningOrder !== null && immediateNextSigningOrder !== null) {
+            await tx.recipient.update({
+              where: { id: selectedRecipient.id },
               data: {
-                recipientEmail: selectedRecipient.email,
-                recipientName: selectedRecipient.name,
-                recipientId: selectedRecipient.id,
-                recipientRole: selectedRecipient.role,
-                changes: [
-                  {
-                    type: RECIPIENT_DIFF_TYPE.SIGNING_ORDER,
-                    from: selectedSigningOrder,
-                    to: immediateNextSigningOrder,
-                  },
-                ],
+                signingOrder: immediateNextSigningOrder,
               },
-            }),
-          });
+            });
+
+            await tx.recipient.update({
+              where: { id: immediateNextRecipient.id },
+              data: {
+                signingOrder: selectedSigningOrder,
+              },
+            });
+
+            await tx.documentAuditLog.create({
+              data: createDocumentAuditLogData({
+                type: DOCUMENT_AUDIT_LOG_TYPE.RECIPIENT_UPDATED,
+                envelopeId: createdEnvelope.id,
+                user: {
+                  id: user?.id,
+                  name: user?.name,
+                  email: directRecipientEmail,
+                },
+                metadata: requestMetadata,
+                data: {
+                  recipientEmail: selectedRecipient.email,
+                  recipientName: selectedRecipient.name,
+                  recipientId: selectedRecipient.id,
+                  recipientRole: selectedRecipient.role,
+                  changes: [
+                    {
+                      type: RECIPIENT_DIFF_TYPE.SIGNING_ORDER,
+                      from: selectedSigningOrder,
+                      to: immediateNextSigningOrder,
+                    },
+                  ],
+                },
+              }),
+            });
+          }
         }
       }
     }

@@ -94,6 +94,7 @@ export const ZRecipientDiffTypeSchema = z.enum([
   'ACCESS_AUTH',
   'ACTION_AUTH',
   'SIGNING_ORDER',
+  'DICTATED_SIGNER_UNAVAILABLE',
 ]);
 
 export const DOCUMENT_AUDIT_LOG_TYPE = ZDocumentAuditLogTypeSchema.Enum;
@@ -181,6 +182,12 @@ export const ZRecipientDiffSigningOrderSchema = z.object({
   to: z.number().nullable(),
 });
 
+export const ZRecipientDiffDictatedSignerUnavailableSchema = z.object({
+  type: z.literal(RECIPIENT_DIFF_TYPE.DICTATED_SIGNER_UNAVAILABLE),
+  dictatedSignerEmail: z.string(),
+  dictatedSignerName: z.string(),
+});
+
 export const ZDocumentAuditLogRecipientDiffSchema = z.discriminatedUnion('type', [
   ZRecipientDiffActionAuthSchema,
   ZRecipientDiffAccessAuthSchema,
@@ -188,6 +195,7 @@ export const ZDocumentAuditLogRecipientDiffSchema = z.discriminatedUnion('type',
   ZRecipientDiffRoleSchema,
   ZRecipientDiffEmailSchema,
   ZRecipientDiffSigningOrderSchema,
+  ZRecipientDiffDictatedSignerUnavailableSchema,
 ]);
 
 const ZBaseFieldEventDataSchema = z.object({

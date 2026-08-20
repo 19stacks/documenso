@@ -131,10 +131,21 @@ export const EmbedSignDocumentV1ClientPage = ({
         return;
       }
 
-      await completeDocumentWithToken({
+      const result = await completeDocumentWithToken({
         documentId,
         token,
       });
+
+      if (result.status === 'SIGNED' && result.nextRecipientNotReady) {
+        const email = result.nextRecipientNotReady.email;
+        toast({
+          title: _(msg`Next recipient not ready`),
+          description: _(
+            msg`The next recipient (${email}) cannot be notified yet as they require signature fields to be assigned to them.`,
+          ),
+          variant: 'destructive',
+        });
+      }
 
       if (window.parent) {
         window.parent.postMessage(

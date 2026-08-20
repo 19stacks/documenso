@@ -15,6 +15,7 @@ import { jobs } from '../../jobs/client';
 import { extractDerivedDocumentEmailSettings } from '../../types/document-email';
 import { createDocumentAuditLogData } from '../../utils/document-audit-logs';
 import { mapSecondaryIdToDocumentId } from '../../utils/envelope';
+import { logger } from '../../utils/logger';
 import { canRecipientBeModified, isRecipientEmailValidForSending } from '../../utils/recipients';
 import { assertEnvelopeMutable } from '../envelope/assert-envelope-mutable';
 import { getEnvelopeWhereInput } from '../envelope/get-envelope-by-id';
@@ -33,6 +34,10 @@ export const deleteEnvelopeRecipient = async ({
   recipientId,
   requestMetadata,
 }: DeleteEnvelopeRecipientOptions) => {
+  // The initial lookup is scoped by `teamId` (not user membership) because the
+  // Wize backend invokes this endpoint using a team API token, which authorises
+  // at the team level. The user-level authorisation is enforced later by
+  // `getEnvelopeWhereInput` before the destructive delete.
   const envelope = await prisma.envelope.findFirst({
     where: {
       recipients: {
@@ -225,6 +230,13 @@ export const deleteEnvelopeRecipient = async ({
           recipientId: nextRecipient.id,
           requestMetadata: requestMetadata.requestMetadata,
         },
+      });
+    } else if (nextRecipient && isNextRecipientsTurn && nextRecipient.sendStatus !== SendStatus.SENT) {
+      logger.warn({
+        msg: 'Skipped notifying next signer after recipient deletion: recipient has no signature fields to sign',
+        envelopeId: envelope.id,
+        recipientId: nextRecipient.id,
+        recipientEmail: nextRecipient.email,
       });
     }
   }

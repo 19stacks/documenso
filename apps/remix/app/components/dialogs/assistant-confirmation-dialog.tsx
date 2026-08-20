@@ -115,7 +115,11 @@ export function AssistantConfirmationDialog({
               <div className="mt-4 flex flex-col gap-4">
                 {showDictateNextSigner && (
                   <div className="mt-4 flex flex-col gap-4">
-                    <NextSignerSelect pendingRecipients={pendingRecipients} />
+                    <NextSignerSelect
+                      pendingRecipients={pendingRecipients}
+                      control={form.control}
+                      setValue={form.setValue}
+                    />
                   </div>
                 )}
 

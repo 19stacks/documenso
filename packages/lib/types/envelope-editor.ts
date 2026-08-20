@@ -237,7 +237,7 @@ export const ZEmbedCreateEnvelopeAuthoringSchema = ZBaseEmbedDataSchema.extend({
       name: z.string().optional(),
     })
     .optional(),
-  features: z.object({}).passthrough().optional().default(DEFAULT_EMBEDDED_EDITOR_CONFIG),
+  features: ZEnvelopeEditorSettingsSchema.deepPartial().default(DEFAULT_EMBEDDED_EDITOR_CONFIG),
 });
 
 export const ZEmbedEditEnvelopeAuthoringSchema = ZBaseEmbedDataSchema.extend({
@@ -248,7 +248,7 @@ export const ZEmbedEditEnvelopeAuthoringSchema = ZBaseEmbedDataSchema.extend({
       name: z.string().optional(),
     })
     .optional(),
-  features: z.object({}).passthrough().optional().default(DEFAULT_EMBEDDED_EDITOR_CONFIG),
+  features: ZEnvelopeEditorSettingsSchema.deepPartial().default(DEFAULT_EMBEDDED_EDITOR_CONFIG),
 });
 
 export type TEmbedCreateEnvelopeAuthoring = z.infer<typeof ZEmbedCreateEnvelopeAuthoringSchema>;

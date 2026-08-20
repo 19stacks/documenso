@@ -301,8 +301,7 @@ const EnvelopeEditPage = ({ embedAuthoringOptions }: EnvelopeEditPageProps) => {
     () => ({
       presignToken: token,
       mode: 'edit' as const,
-      ...(((embedAuthoringOptions?.features as Record<string, unknown>)?.actions as Record<string, unknown>)
-        ?.allowSubmitting !== false
+      ...(embedAuthoringOptions?.features?.actions?.allowSubmitting !== false
         ? {
             onUpdate: async (envelope: TEditorEnvelope) => updateEmbeddedEnvelope(envelope),
           }

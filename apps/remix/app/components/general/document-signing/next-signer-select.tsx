@@ -2,7 +2,8 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@docum
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@documenso/ui/primitives/select';
 import { Trans, useLingui } from '@lingui/react/macro';
 import type { ReactNode } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
+import type { Control, UseFormSetValue } from 'react-hook-form';
+import { useWatch } from 'react-hook-form';
 
 import type { PendingDictateRecipient } from './document-signing-complete-dialog';
 
@@ -14,13 +15,20 @@ type NextSignerSelectFormShape = {
 
 type NextSignerSelectProps = {
   pendingRecipients: PendingDictateRecipient[];
+  control: Control<NextSignerSelectFormShape>;
+  setValue: UseFormSetValue<NextSignerSelectFormShape>;
   nameLabel?: ReactNode;
   emailLabel?: ReactNode;
 };
 
-export const NextSignerSelect = ({ pendingRecipients, nameLabel, emailLabel }: NextSignerSelectProps) => {
+export const NextSignerSelect = ({
+  pendingRecipients,
+  control,
+  setValue,
+  nameLabel,
+  emailLabel,
+}: NextSignerSelectProps) => {
   const { t } = useLingui();
-  const { control, setValue } = useFormContext<NextSignerSelectFormShape>();
 
   const selectedName = useWatch({ control, name: 'name' });
   const selectedEmail = useWatch({ control, name: 'email' });

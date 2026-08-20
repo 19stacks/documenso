@@ -9,7 +9,7 @@ import { triggerWebhook } from '../webhooks/trigger/trigger-webhook';
 
 export type TriggerEnvelopeUpdatedWebhookOptions = {
   userId: number;
-  teamId: number;
+  teamId?: number;
   id: EnvelopeIdOptions;
   type: EnvelopeType | null;
 };

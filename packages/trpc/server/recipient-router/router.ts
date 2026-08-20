@@ -610,6 +610,7 @@ export const recipientRouter = router({
         status: 'SIGNED' as const,
         dictatedNextSignerUnavailable: result.dictatedNextSignerUnavailable,
         notifiedNextRecipient: result.notifiedNextRecipient,
+        nextRecipientNotReady: result.nextRecipientNotReady,
       };
     }),
 

@@ -126,10 +126,21 @@ export const MultiSignDocumentSigningView = ({
     try {
       setIsSubmitting(true);
 
-      await completeDocumentWithToken({
+      const result = await completeDocumentWithToken({
         documentId: document!.id,
         token,
       });
+
+      if (result.status === 'SIGNED' && result.nextRecipientNotReady) {
+        const email = result.nextRecipientNotReady.email;
+        toast({
+          title: _(msg`Next recipient not ready`),
+          description: _(
+            msg`The next recipient (${email}) cannot be notified yet as they require signature fields to be assigned to them.`,
+          ),
+          variant: 'destructive',
+        });
+      }
 
       onBack();
 
