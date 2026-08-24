@@ -94,6 +94,30 @@ export const updateEmbeddingEnvelopeRoute = procedure
       });
     }
 
+    // Validate that all SIGNER recipients have at least one signature field.
+    // This matches the validation performed by `sendDocument` at distribute time,
+    // so the embed editor surfaces the same error before the envelope is updated.
+    // Runs before any writes so a rejected payload leaves the envelope untouched.
+    const signersMissingSignatureFields = data.recipients.filter((recipient) => {
+      if (recipient.role !== RecipientRole.SIGNER) {
+        return false;
+      }
+
+      const hasSignatureField = (recipient.fields ?? []).some((field) => isSignatureFieldType(field.type));
+
+      return !hasSignatureField;
+    });
+
+    if (signersMissingSignatureFields.length > 0) {
+      const missingRecipientDescriptions = signersMissingSignatureFields
+        .map((recipient) => `${recipient.name || recipient.email} (${recipient.email})`)
+        .join(', ');
+
+      throw new AppError(AppErrorCode.INVALID_REQUEST, {
+        message: `The following recipients are missing required fields: ${missingRecipientDescriptions}. Signers must have at least one signature field.`,
+      });
+    }
+
     // Step 1: Update the envelope items.
     const envelopeItemsToUpdate: EnvelopeItemUpdateOptions[] = [];
     const envelopeItemsToCreate: EnvelopeItemCreateOptions[] = [];
@@ -339,29 +363,6 @@ export const updateEmbeddingEnvelopeRoute = procedure
       ...recipient,
       clientId: nanoid(),
     }));
-
-    // Validate that all SIGNER recipients have at least one signature field.
-    // This matches the validation performed by `sendDocument` at distribute time,
-    // so the embed editor surfaces the same error before the envelope is updated.
-    const signersMissingSignatureFields = data.recipients.filter((recipient) => {
-      if (recipient.role !== RecipientRole.SIGNER) {
-        return false;
-      }
-
-      const hasSignatureField = (recipient.fields ?? []).some((field) => isSignatureFieldType(field.type));
-
-      return !hasSignatureField;
-    });
-
-    if (signersMissingSignatureFields.length > 0) {
-      const missingRecipientDescriptions = signersMissingSignatureFields
-        .map((recipient) => `${recipient.name || recipient.email} (${recipient.email})`)
-        .join(', ');
-
-      throw new AppError(AppErrorCode.INVALID_REQUEST, {
-        message: `The following recipients are missing required fields: ${missingRecipientDescriptions}. Signers must have at least one signature field.`,
-      });
-    }
 
     const { recipients: updatedRecipients } = await match(envelope.type)
       .with(EnvelopeType.DOCUMENT, async () =>

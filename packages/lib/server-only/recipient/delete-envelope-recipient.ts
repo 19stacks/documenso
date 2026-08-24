@@ -135,12 +135,34 @@ export const deleteEnvelopeRecipient = async ({
       });
     }
 
-    return await tx.recipient.delete({
+    const deleted = await tx.recipient.delete({
       where: {
         id: recipientId,
         envelope: envelopeWhereInput,
       },
     });
+
+    // Keep the signing order contiguous (1..n) for any remaining recipients that
+    // already have a signing order, regardless of the signing order mode. The
+    // embedded editor and Wize always assign positive, contiguous orders, so a
+    // deletion without renumbering would leave stale gaps (2, 3, ...) behind.
+    await tx.$executeRaw`
+        WITH ranked AS (
+          SELECT
+            id,
+            ROW_NUMBER() OVER (ORDER BY "signingOrder" ASC NULLS LAST, id ASC) AS new_order
+          FROM "Recipient"
+          WHERE "envelopeId" = ${envelope.id}
+            AND "role" <> 'CC'
+            AND "signingOrder" IS NOT NULL
+        )
+        UPDATE "Recipient" AS r
+        SET "signingOrder" = ranked.new_order
+        FROM ranked
+        WHERE r.id = ranked.id AND r."signingOrder" IS DISTINCT FROM ranked.new_order
+      `;
+
+    return deleted;
   });
 
   const isRecipientRemovedEmailEnabled = extractDerivedDocumentEmailSettings(envelope.documentMeta).recipientRemoved;
