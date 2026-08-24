@@ -1,4 +1,4 @@
-import { IS_BILLING_ENABLED } from '../../constants/app';
+import { IS_BILLING_ENABLED, IS_HIDE_POWERED_BY_ENABLED } from '../../constants/app';
 import type { TCssVarsSchema } from '../../types/css-vars';
 import { ZCssVarsSchema } from '../../types/css-vars';
 import { getOrganisationClaimByTeamId } from '../organisation/get-organisation-claims';
@@ -32,7 +32,7 @@ export const loadRecipientBrandingByTeamId = async ({
   ]);
 
   let allowCustomBranding = !billingEnabled || claim?.flags?.embedSigningWhiteLabel === true;
-  const hidePoweredBy = !billingEnabled || claim?.flags?.hidePoweredBy === true;
+  const hidePoweredBy = IS_HIDE_POWERED_BY_ENABLED() || claim?.flags?.hidePoweredBy === true;
 
   if (!settings.brandingEnabled) {
     allowCustomBranding = false;
