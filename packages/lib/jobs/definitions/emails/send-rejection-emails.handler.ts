@@ -12,6 +12,7 @@ import { NEXT_PUBLIC_WEBAPP_URL } from '../../../constants/app';
 import { DOCUMENSO_INTERNAL_EMAIL } from '../../../constants/email';
 import { getEmailContext } from '../../../server-only/email/get-email-context';
 import { extractDerivedDocumentEmailSettings } from '../../../types/document-email';
+import { isEmailHtmlValid } from '../../../utils/email-html';
 import { unsafeBuildEnvelopeIdQuery } from '../../../utils/envelope';
 import { renderEmailWithI18N } from '../../../utils/render-email-with-i18n';
 import { formatDocumentsPath } from '../../../utils/teams';
@@ -79,6 +80,8 @@ export const run = async ({ payload, io }: { payload: TSendSigningRejectionEmail
   // Skipped when the organisation has email sending disabled, since this is sent on its behalf.
   // The owner notification below intentionally uses the internal Documenso email, so it still sends.
   if (!emailsDisabled && isRecipientEmailValidForSending(recipient)) {
+    const recipientEmailSubject = i18n._(msg`Document "${envelope.title}" - Rejection Confirmed`);
+
     await io.runTask('send-rejection-confirmation-email', async () => {
       const recipientTemplate = createElement(DocumentRejectionConfirmedEmail, {
         recipientName: recipient.name,
@@ -88,30 +91,62 @@ export const run = async ({ payload, io }: { payload: TSendSigningRejectionEmail
         assetBaseUrl: NEXT_PUBLIC_WEBAPP_URL(),
       });
 
-      const [html, text] = await Promise.all([
-        renderEmailWithI18N(recipientTemplate, { lang: emailLanguage, branding }),
-        renderEmailWithI18N(recipientTemplate, {
-          lang: emailLanguage,
-          branding,
-          plainText: true,
-        }),
-      ]);
+      try {
+        const [html, text] = await Promise.all([
+          renderEmailWithI18N(recipientTemplate, { lang: emailLanguage, branding }),
+          renderEmailWithI18N(recipientTemplate, {
+            lang: emailLanguage,
+            branding,
+            plainText: true,
+          }),
+        ]);
 
-      await emailTransport.sendMail({
-        to: {
-          name: recipient.name,
-          address: recipient.email,
-        },
-        from: senderEmail,
-        replyTo: replyToEmail,
-        subject: i18n._(msg`Document "${envelope.title}" - Rejection Confirmed`),
-        html,
-        text,
-      });
+        if (!isEmailHtmlValid(html)) {
+          io.logger.error({
+            msg: 'Rejection confirmation email skipped: rendered HTML body is empty or truncated',
+            envelopeId: envelope.id,
+            recipientId: recipient.id,
+            recipientEmail: recipient.email,
+            subject: recipientEmailSubject,
+            htmlLength: html.length,
+            textLength: text.length,
+            htmlEndsWithClosingTag: html.trim().endsWith('</html>'),
+            emailLanguage,
+          });
+
+          return;
+        }
+
+        await emailTransport.sendMail({
+          to: {
+            name: recipient.name,
+            address: recipient.email,
+          },
+          from: senderEmail,
+          replyTo: replyToEmail,
+          subject: recipientEmailSubject,
+          html,
+          text,
+        });
+      } catch (err) {
+        io.logger.error({
+          msg: 'Failed to send rejection confirmation email',
+          err,
+          envelopeId: envelope.id,
+          recipientId: recipient.id,
+          recipientEmail: recipient.email,
+          subject: recipientEmailSubject,
+          emailLanguage,
+        });
+
+        throw err;
+      }
     });
   }
 
   // Send notification email to document owner
+  const ownerEmailSubject = i18n._(msg`Document "${envelope.title}" - Rejected by ${recipient.name}`);
+
   await io.runTask('send-owner-notification-email', async () => {
     const ownerTemplate = createElement(DocumentRejectedEmail, {
       recipientName: recipient.name,
@@ -121,25 +156,57 @@ export const run = async ({ payload, io }: { payload: TSendSigningRejectionEmail
       assetBaseUrl: NEXT_PUBLIC_WEBAPP_URL(),
     });
 
-    const [html, text] = await Promise.all([
-      renderEmailWithI18N(ownerTemplate, { lang: emailLanguage, branding }),
-      renderEmailWithI18N(ownerTemplate, {
-        lang: emailLanguage,
-        branding,
-        plainText: true,
-      }),
-    ]);
+    try {
+      const [html, text] = await Promise.all([
+        renderEmailWithI18N(ownerTemplate, { lang: emailLanguage, branding }),
+        renderEmailWithI18N(ownerTemplate, {
+          lang: emailLanguage,
+          branding,
+          plainText: true,
+        }),
+      ]);
 
-    await mailer.sendMail({
-      to: {
-        name: documentOwner.name || '',
-        address: documentOwner.email,
-      },
-      from: DOCUMENSO_INTERNAL_EMAIL, // Purposefully using internal email here.
-      subject: i18n._(msg`Document "${envelope.title}" - Rejected by ${recipient.name}`),
-      html,
-      text,
-    });
+      if (!isEmailHtmlValid(html)) {
+        io.logger.error({
+          msg: 'Rejection owner notification email skipped: rendered HTML body is empty or truncated',
+          envelopeId: envelope.id,
+          recipientId: recipient.id,
+          recipientEmail: recipient.email,
+          documentOwnerEmail: documentOwner.email,
+          subject: ownerEmailSubject,
+          htmlLength: html.length,
+          textLength: text.length,
+          htmlEndsWithClosingTag: html.trim().endsWith('</html>'),
+          emailLanguage,
+        });
+
+        return;
+      }
+
+      await mailer.sendMail({
+        to: {
+          name: documentOwner.name || '',
+          address: documentOwner.email,
+        },
+        from: DOCUMENSO_INTERNAL_EMAIL, // Purposefully using internal email here.
+        subject: ownerEmailSubject,
+        html,
+        text,
+      });
+    } catch (err) {
+      io.logger.error({
+        msg: 'Failed to send rejection owner notification email',
+        err,
+        envelopeId: envelope.id,
+        recipientId: recipient.id,
+        recipientEmail: recipient.email,
+        documentOwnerEmail: documentOwner.email,
+        subject: ownerEmailSubject,
+        emailLanguage,
+      });
+
+      throw err;
+    }
   });
 
   await io.runTask('update-recipient', async () => {

@@ -8,6 +8,7 @@ import { NEXT_PUBLIC_WEBAPP_URL } from '../../../constants/app';
 import { getEmailContext } from '../../../server-only/email/get-email-context';
 import { assertOrganisationRatesAndLimits } from '../../../server-only/rate-limit/assert-organisation-rates-and-limits';
 import { extractDerivedDocumentEmailSettings } from '../../../types/document-email';
+import { isEmailHtmlValid } from '../../../utils/email-html';
 import { isRecipientEmailValidForSending } from '../../../utils/recipients';
 import { renderEmailWithI18N } from '../../../utils/render-email-with-i18n';
 import type { JobRunIO } from '../../client/_internal/job';
@@ -84,22 +85,52 @@ export const run = async ({ payload, io }: { payload: TSendRecipientRemovedEmail
 
   const i18n = await getI18nInstance(emailLanguage);
 
-  await io.runTask('send-recipient-removed-email', async () => {
-    const [html, text] = await Promise.all([
-      renderEmailWithI18N(template, { lang: emailLanguage, branding }),
-      renderEmailWithI18N(template, { lang: emailLanguage, branding, plainText: true }),
-    ]);
+  const emailSubject = i18n._(msg`You have been removed from a document`);
 
-    await emailTransport.sendMail({
-      to: {
-        address: recipientEmail,
-        name: recipientName,
-      },
-      from: senderEmail,
-      replyTo: replyToEmail,
-      subject: i18n._(msg`You have been removed from a document`),
-      html,
-      text,
-    });
+  await io.runTask('send-recipient-removed-email', async () => {
+    try {
+      const [html, text] = await Promise.all([
+        renderEmailWithI18N(template, { lang: emailLanguage, branding }),
+        renderEmailWithI18N(template, { lang: emailLanguage, branding, plainText: true }),
+      ]);
+
+      if (!isEmailHtmlValid(html)) {
+        io.logger.error({
+          msg: 'Recipient removed email skipped: rendered HTML body is empty or truncated',
+          envelopeId: envelope.id,
+          recipientEmail,
+          subject: emailSubject,
+          htmlLength: html.length,
+          textLength: text.length,
+          htmlEndsWithClosingTag: html.trim().endsWith('</html>'),
+          emailLanguage,
+        });
+
+        return;
+      }
+
+      await emailTransport.sendMail({
+        to: {
+          address: recipientEmail,
+          name: recipientName,
+        },
+        from: senderEmail,
+        replyTo: replyToEmail,
+        subject: emailSubject,
+        html,
+        text,
+      });
+    } catch (err) {
+      io.logger.error({
+        msg: 'Failed to send recipient removed email',
+        err,
+        envelopeId: envelope.id,
+        recipientEmail,
+        subject: emailSubject,
+        emailLanguage,
+      });
+
+      throw err;
+    }
   });
 };

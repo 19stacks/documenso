@@ -22,7 +22,10 @@ export const renderEmailWithI18N = async (
 
     return renderWithI18N(component, { i18n, ...otherOptions });
   } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+
     console.error(err);
-    throw new Error('Failed to render email');
+
+    throw new Error(`Failed to render email: ${errorMessage}`);
   }
 };
