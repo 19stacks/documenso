@@ -71,7 +71,6 @@ export const upsertFieldRect = (field: FieldToRender, options: RenderFieldElemen
 export const upsertRecipientNameLabel = (
   field: FieldToRender,
   options: RenderFieldElementOptions,
-  fieldFontSize?: number,
 ): Konva.Text | null => {
   const { pageWidth, pageHeight, mode, color, recipientName } = options;
 
@@ -81,7 +80,7 @@ export const upsertRecipientNameLabel = (
 
   const { fieldWidth } = calculateFieldPosition(field, pageWidth, pageHeight);
 
-  const nameFontSize = Math.max(7, fieldFontSize ?? 12);
+  const nameFontSize = 14;
   const nameY = -(nameFontSize + 4);
 
   const nameText = new Konva.Text({
