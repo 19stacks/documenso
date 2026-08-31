@@ -246,11 +246,7 @@ export const renderSignatureFieldElement = (field: FieldToRender, options: Rende
   fieldGroup.add(fieldRect);
   fieldGroup.add(fieldSignature);
 
-  const recipientNameLabel = upsertRecipientNameLabel(
-    field,
-    options,
-    field.fieldMeta?.fontSize || DEFAULT_SIGNATURE_TEXT_FONT_SIZE,
-  );
+  const recipientNameLabel = upsertRecipientNameLabel(field, options);
   if (recipientNameLabel) {
     fieldGroup.add(recipientNameLabel);
   }
