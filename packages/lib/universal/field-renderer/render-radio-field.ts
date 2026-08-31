@@ -195,7 +195,7 @@ export const renderRadioFieldElement = (field: FieldToRender, options: RenderFie
     createFieldHoverInteraction({ fieldGroup, fieldRect, options });
   }
 
-  const recipientNameLabel = upsertRecipientNameLabel(field, options, fontSize);
+  const recipientNameLabel = upsertRecipientNameLabel(field, options);
   if (recipientNameLabel) {
     fieldGroup.add(recipientNameLabel);
   }
