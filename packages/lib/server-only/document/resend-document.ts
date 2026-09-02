@@ -1,6 +1,12 @@
+import { SENDGRID_TEMPLATE_IDS, sendEmailWithSendGridOrFallback } from '@documenso/email/sendgrid';
 import { DocumentInviteEmailTemplate } from '@documenso/email/templates/document-invite';
 import { resolveExpiresAt } from '@documenso/lib/constants/envelope-expiration';
-import { RECIPIENT_ROLE_TO_EMAIL_TYPE, RECIPIENT_ROLES_DESCRIPTION } from '@documenso/lib/constants/recipient-roles';
+import {
+  RECIPIENT_ROLE_TO_EMAIL_BUTTON_LABEL,
+  RECIPIENT_ROLE_TO_EMAIL_SUBTEXT,
+  RECIPIENT_ROLE_TO_EMAIL_TYPE,
+  RECIPIENT_ROLES_DESCRIPTION,
+} from '@documenso/lib/constants/recipient-roles';
 import { AppError } from '@documenso/lib/errors/app-error';
 import { DOCUMENT_AUDIT_LOG_TYPE } from '@documenso/lib/types/document-audit-logs';
 import type { ApiRequestMetadata } from '@documenso/lib/universal/extract-request-metadata';
@@ -273,16 +279,43 @@ export const resendDocument = async ({ id, userId, recipients, teamId, requestMe
 
       // Send email outside any transaction to avoid holding a connection
       // open during network I/O.
-      await emailTransport.sendMail({
+      const resolvedSubject = envelope.documentMeta.subject
+        ? renderCustomEmailTemplate(i18n._(msg`Reminder: ${envelope.documentMeta.subject}`), customEmailTemplate)
+        : emailSubject;
+
+      await sendEmailWithSendGridOrFallback({
+        transporter: emailTransport,
+        templateId: SENDGRID_TEMPLATE_IDS['document-invite'],
+        dynamicTemplateData: {
+          documentName: envelope.title,
+          inviterName: user.name || undefined,
+          inviterEmail:
+            organisationType === OrganisationType.ORGANISATION
+              ? envelope.team?.teamEmail?.email || user.email
+              : user.email,
+          assetBaseUrl,
+          signDocumentLink,
+          customBody: renderCustomEmailTemplate(emailMessage, customEmailTemplate),
+          role: recipient.role,
+          selfSigner,
+          organisationType,
+          teamName: envelope.team?.name,
+          reportUrl,
+          subject: resolvedSubject,
+          isOrganisation: organisationType === OrganisationType.ORGANISATION,
+          // CC recipients are excluded above, so the button is always shown here.
+          showButton: true,
+          actionVerb: recipientActionVerb,
+          buttonLabel: RECIPIENT_ROLE_TO_EMAIL_BUTTON_LABEL[recipient.role],
+          subtext: RECIPIENT_ROLE_TO_EMAIL_SUBTEXT[recipient.role],
+        },
         to: {
           address: email,
           name,
         },
         from: senderEmail,
         replyTo: replyToEmail,
-        subject: envelope.documentMeta.subject
-          ? renderCustomEmailTemplate(i18n._(msg`Reminder: ${envelope.documentMeta.subject}`), customEmailTemplate)
-          : emailSubject,
+        subject: resolvedSubject,
         html,
         text,
         headers: buildEnvelopeEmailHeaders({

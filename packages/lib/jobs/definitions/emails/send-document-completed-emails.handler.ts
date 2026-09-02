@@ -1,3 +1,4 @@
+import { SENDGRID_TEMPLATE_IDS, sendEmailWithSendGridOrFallback } from '@documenso/email/sendgrid';
 import { DocumentCompletedEmailTemplate } from '@documenso/email/templates/document-completed';
 import { prisma } from '@documenso/prisma';
 import { msg } from '@lingui/core/macro';
@@ -138,7 +139,17 @@ export const run = async ({ payload, io }: { payload: TSendDocumentCompletedEmai
 
     const i18n = await getI18nInstance(emailLanguage);
 
-    await emailTransport.sendMail({
+    const resolvedSubject = i18n._(msg`Signing Complete!`);
+
+    await sendEmailWithSendGridOrFallback({
+      transporter: emailTransport,
+      templateId: SENDGRID_TEMPLATE_IDS['document-completed'],
+      dynamicTemplateData: {
+        documentName: envelope.title,
+        assetBaseUrl,
+        downloadLink: documentOwnerDownloadLink,
+        subject: resolvedSubject,
+      },
       to: [
         {
           name: owner.name || '',
@@ -147,7 +158,7 @@ export const run = async ({ payload, io }: { payload: TSendDocumentCompletedEmai
       ],
       from: senderEmail,
       replyTo: replyToEmail,
-      subject: i18n._(msg`Signing Complete!`),
+      subject: resolvedSubject,
       html,
       text,
       attachments: completedDocumentEmailAttachments,
@@ -235,7 +246,25 @@ export const run = async ({ payload, io }: { payload: TSendDocumentCompletedEmai
 
       const i18n = await getI18nInstance(emailLanguage);
 
-      await emailTransport.sendMail({
+      const resolvedSubject =
+        isDirectTemplate && envelope.documentMeta?.subject
+          ? renderCustomEmailTemplate(envelope.documentMeta.subject, customEmailTemplate)
+          : i18n._(msg`Signing Complete!`);
+
+      await sendEmailWithSendGridOrFallback({
+        transporter: emailTransport,
+        templateId: SENDGRID_TEMPLATE_IDS['document-completed'],
+        dynamicTemplateData: {
+          documentName: envelope.title,
+          assetBaseUrl,
+          downloadLink: recipient.email === owner.email ? documentOwnerDownloadLink : downloadLink,
+          customBody:
+            isDirectTemplate && envelope.documentMeta?.message
+              ? renderCustomEmailTemplate(envelope.documentMeta.message, customEmailTemplate)
+              : undefined,
+          reportUrl,
+          subject: resolvedSubject,
+        },
         to: [
           {
             name: recipient.name,
@@ -244,10 +273,7 @@ export const run = async ({ payload, io }: { payload: TSendDocumentCompletedEmai
         ],
         from: senderEmail,
         replyTo: replyToEmail,
-        subject:
-          isDirectTemplate && envelope.documentMeta?.subject
-            ? renderCustomEmailTemplate(envelope.documentMeta.subject, customEmailTemplate)
-            : i18n._(msg`Signing Complete!`),
+        subject: resolvedSubject,
         html,
         text,
         attachments: completedDocumentEmailAttachments,

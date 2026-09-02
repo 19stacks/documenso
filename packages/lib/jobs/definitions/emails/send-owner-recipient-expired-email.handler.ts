@@ -1,3 +1,4 @@
+import { SENDGRID_TEMPLATE_IDS, sendEmailWithSendGridOrFallback } from '@documenso/email/sendgrid';
 import { RecipientExpiredTemplate } from '@documenso/email/templates/recipient-expired';
 import { prisma } from '@documenso/prisma';
 import { msg } from '@lingui/core/macro';
@@ -97,13 +98,27 @@ export const run = async ({ payload, io }: { payload: TSendOwnerRecipientExpired
       }),
     ]);
 
-    await emailTransport.sendMail({
+    const resolvedSubject = i18n._(
+      msg`Signing window expired for "${recipient.name || recipient.email}" on "${envelope.title}"`,
+    );
+
+    await sendEmailWithSendGridOrFallback({
+      transporter: emailTransport,
+      templateId: SENDGRID_TEMPLATE_IDS['recipient-expired'],
+      dynamicTemplateData: {
+        documentName: envelope.title,
+        recipientName: recipient.name || recipient.email,
+        recipientEmail: recipient.email,
+        documentLink,
+        assetBaseUrl: NEXT_PUBLIC_WEBAPP_URL(),
+        subject: resolvedSubject,
+      },
       to: {
         name: documentOwner.name || '',
         address: documentOwner.email,
       },
       from: senderEmail,
-      subject: i18n._(msg`Signing window expired for "${recipient.name || recipient.email}" on "${envelope.title}"`),
+      subject: resolvedSubject,
       html,
       text,
     });

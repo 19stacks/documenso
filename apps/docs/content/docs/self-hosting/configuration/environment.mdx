@@ -135,6 +135,23 @@ Documenso supports multiple email transports for sending notifications.
 | `NEXT_PRIVATE_MAILCHANNELS_DKIM_SELECTOR`    | DKIM selector                     | -                                         |
 | `NEXT_PRIVATE_MAILCHANNELS_DKIM_PRIVATE_KEY` | DKIM private key                  | -                                         |
 
+### SendGrid
+
+| Variable                                        | Description                                      |
+| ----------------------------------------------- | ------------------------------------------------ |
+| `NEXT_PRIVATE_SENDGRID_API_KEY`                 | API key from the SendGrid dashboard              |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_INVITE` | Dynamic template id for signing invitations      |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_PENDING` | Dynamic template id for pending signatures       |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_REMINDER` | Dynamic template id for signing reminders        |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_COMPLETED` | Dynamic template id for completion notifications |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_REJECTED` | Dynamic template id for rejection notifications  |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_REJECTION_CONFIRMED` | Dynamic template id for rejection confirmations  |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_CANCELLED` | Dynamic template id for cancellation notifications |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_DELETED` | Dynamic template id for deletion notifications   |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_RECIPIENT_SIGNED` | Dynamic template id for recipient signed notifications |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_RECIPIENT_EXPIRED` | Dynamic template id for recipient expired notifications |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_RECIPIENT_REMOVED` | Dynamic template id for recipient removed notifications |
+
 ### Sender Configuration
 
 | Variable                         | Description                     |

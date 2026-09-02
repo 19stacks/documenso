@@ -1,3 +1,4 @@
+import { SENDGRID_TEMPLATE_IDS, sendEmailWithSendGridOrFallback } from '@documenso/email/sendgrid';
 import { DocumentRecipientSignedEmailTemplate } from '@documenso/email/templates/document-recipient-signed';
 import { prisma } from '@documenso/prisma';
 import { msg } from '@lingui/core/macro';
@@ -104,13 +105,24 @@ export const run = async ({ payload, io }: { payload: TSendRecipientSignedEmailJ
       }),
     ]);
 
-    await emailTransport.sendMail({
+    const resolvedSubject = i18n._(msg`${recipientReference} has signed "${envelope.title}"`);
+
+    await sendEmailWithSendGridOrFallback({
+      transporter: emailTransport,
+      templateId: SENDGRID_TEMPLATE_IDS['recipient-signed'],
+      dynamicTemplateData: {
+        documentName: envelope.title,
+        recipientName,
+        recipientEmail,
+        assetBaseUrl,
+        subject: resolvedSubject,
+      },
       to: {
         name: owner.name ?? '',
         address: owner.email,
       },
       from: senderEmail,
-      subject: i18n._(msg`${recipientReference} has signed "${envelope.title}"`),
+      subject: resolvedSubject,
       html,
       text,
     });

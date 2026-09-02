@@ -1,3 +1,4 @@
+import { SENDGRID_TEMPLATE_IDS, sendEmailWithSendGridOrFallback } from '@documenso/email/sendgrid';
 import RecipientRemovedFromDocumentTemplate from '@documenso/email/templates/recipient-removed-from-document';
 import { prisma } from '@documenso/prisma';
 import { msg } from '@lingui/core/macro';
@@ -90,14 +91,24 @@ export const run = async ({ payload, io }: { payload: TSendRecipientRemovedEmail
       renderEmailWithI18N(template, { lang: emailLanguage, branding, plainText: true }),
     ]);
 
-    await emailTransport.sendMail({
+    const resolvedSubject = i18n._(msg`You have been removed from a document`);
+
+    await sendEmailWithSendGridOrFallback({
+      transporter: emailTransport,
+      templateId: SENDGRID_TEMPLATE_IDS['recipient-removed'],
+      dynamicTemplateData: {
+        documentName: envelope.title,
+        inviterName: inviterName || undefined,
+        assetBaseUrl,
+        subject: resolvedSubject,
+      },
       to: {
         address: recipientEmail,
         name: recipientName,
       },
       from: senderEmail,
       replyTo: replyToEmail,
-      subject: i18n._(msg`You have been removed from a document`),
+      subject: resolvedSubject,
       html,
       text,
     });
