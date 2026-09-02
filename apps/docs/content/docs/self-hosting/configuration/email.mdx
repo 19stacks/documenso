@@ -240,9 +240,50 @@ NEXT_PRIVATE_SMTP_FROM_ADDRESS="noreply@yourdomain.com"
 NEXT_PRIVATE_SMTP_FROM_NAME="Documenso"
 ```
 
+## SendGrid Dynamic Templates
+
+[SendGrid](https://sendgrid.com) dynamic templates can be used for document signature related emails. Each email type has its own template id. When a template id is left empty, the email falls back to the React-rendered HTML through the configured SMTP transport. SendGrid dynamic templates own their own subject line, so the subject is set in the SendGrid dashboard, not in Documenso.
+
+**Environment Variables:**
+
+| Variable                                        | Description                                      |
+| ----------------------------------------------- | ------------------------------------------------ |
+| `NEXT_PRIVATE_SENDGRID_API_KEY`                 | API key from the SendGrid dashboard              |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_INVITE` | Dynamic template id for signing invitations      |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_PENDING` | Dynamic template id for pending signatures       |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_REMINDER` | Dynamic template id for signing reminders        |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_COMPLETED` | Dynamic template id for completion notifications |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_REJECTED` | Dynamic template id for rejection notifications  |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_REJECTION_CONFIRMED` | Dynamic template id for rejection confirmations  |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_CANCELLED` | Dynamic template id for cancellation notifications |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_DELETED` | Dynamic template id for deletion notifications   |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_RECIPIENT_SIGNED` | Dynamic template id for recipient signed notifications |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_RECIPIENT_EXPIRED` | Dynamic template id for recipient expired notifications |
+| `NEXT_PRIVATE_SENDGRID_TEMPLATE_RECIPIENT_REMOVED` | Dynamic template id for recipient removed notifications |
+
+**Example Configuration:**
+
+```bash
+NEXT_PRIVATE_SENDGRID_API_KEY="SG.your-api-key"
+NEXT_PRIVATE_SENDGRID_TEMPLATE_DOCUMENT_INVITE="d-xxxxxxxxxxxxxxxxxxxxxxxx"
+```
+
+<Callout type="warning">
+  The sender address (`NEXT_PRIVATE_SMTP_FROM_ADDRESS`) must be a verified sender in your SendGrid account for dynamic templates to send successfully.
+</Callout>
+
+<Callout type="info">
+  SendGrid dynamic templates receive the email subject through the `subject` data field. Set the
+  template subject to `{{{subject}}}` (triple braces) — the regular `{{subject}}` HTML-escapes quotes,
+  so document titles with `"` render as `&quot;` in the delivered subject line.
+</Callout>
+
 ## Email Templates
 
-Documenso uses React Email templates for all outgoing emails. The templates are located in `packages/email/templates/` and include:
+Documenso uses React Email templates for all outgoing emails. Document-related emails can instead be
+rendered by SendGrid dynamic templates (see the SendGrid section above), in which case the React
+template for that email type only serves as a fallback. The React templates are located in
+`packages/email/templates/` and include:
 
 | Template                  | Purpose                                   |
 | ------------------------- | ----------------------------------------- |

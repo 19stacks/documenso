@@ -128,6 +128,49 @@ export const RECIPIENT_ROLE_TO_EMAIL_TYPE = {
   [RecipientRole.ASSISTANT]: `ASSISTING_REQUEST`,
 } as const;
 
+/**
+ * Pre-computed button labels for the SendGrid dynamic templates.
+ *
+ * Sent as part of `dynamicTemplateData` so the template only uses simple
+ * `{{#if}}` conditions instead of string comparison helpers.
+ */
+export const RECIPIENT_ROLE_TO_EMAIL_BUTTON_LABEL = {
+  [RecipientRole.SIGNER]: 'View Document to sign',
+  [RecipientRole.VIEWER]: 'View Document',
+  [RecipientRole.APPROVER]: 'View Document to approve',
+  [RecipientRole.ASSISTANT]: 'View Document to assist',
+  [RecipientRole.CC]: '',
+} as const;
+
+/**
+ * Pre-computed subtext lines for the SendGrid dynamic templates.
+ *
+ * Sent as part of `dynamicTemplateData` so the template only uses simple
+ * `{{#if}}` conditions instead of string comparison helpers.
+ */
+export const RECIPIENT_ROLE_TO_EMAIL_SUBTEXT = {
+  [RecipientRole.SIGNER]: 'Continue by signing the document.',
+  [RecipientRole.VIEWER]: 'Continue by viewing the document.',
+  [RecipientRole.APPROVER]: 'Continue by approving the document.',
+  [RecipientRole.ASSISTANT]: 'Continue by assisting with the document.',
+  [RecipientRole.CC]: '',
+} as const;
+
+/**
+ * Pre-computed button labels for the signing reminder SendGrid dynamic
+ * template.
+ *
+ * Distinct from `RECIPIENT_ROLE_TO_EMAIL_BUTTON_LABEL`: the reminder email
+ * uses shorter labels ("Sign Document" instead of "View Document to sign").
+ */
+export const RECIPIENT_ROLE_TO_REMINDER_BUTTON_LABEL = {
+  [RecipientRole.SIGNER]: 'Sign Document',
+  [RecipientRole.VIEWER]: 'View Document',
+  [RecipientRole.APPROVER]: 'Approve Document',
+  [RecipientRole.ASSISTANT]: 'Assist Document',
+  [RecipientRole.CC]: '',
+} as const;
+
 export const RECIPIENT_ROLE_SIGNING_REASONS = {
   [RecipientRole.SIGNER]: msg`I am a signer of this document`,
   [RecipientRole.APPROVER]: msg`I am an approver of this document`,

@@ -1,3 +1,4 @@
+import { SENDGRID_TEMPLATE_IDS, sendEmailWithSendGridOrFallback } from '@documenso/email/sendgrid';
 import { DocumentPendingEmailTemplate } from '@documenso/email/templates/document-pending';
 import { unsafeBuildEnvelopeIdQuery } from '@documenso/lib/utils/envelope';
 import { prisma } from '@documenso/prisma';
@@ -86,14 +87,23 @@ export const run = async ({ payload }: { payload: TSendDocumentPendingEmailJobDe
 
   const i18n = await getI18nInstance(emailLanguage);
 
-  await emailTransport.sendMail({
+  const resolvedSubject = i18n._(msg`Waiting for others to complete signing.`);
+
+  await sendEmailWithSendGridOrFallback({
+    transporter: emailTransport,
+    templateId: SENDGRID_TEMPLATE_IDS['document-pending'],
+    dynamicTemplateData: {
+      documentName: envelope.title,
+      assetBaseUrl,
+      subject: resolvedSubject,
+    },
     to: {
       address: email,
       name,
     },
     from: senderEmail,
     replyTo: replyToEmail,
-    subject: i18n._(msg`Waiting for others to complete signing.`),
+    subject: resolvedSubject,
     html,
     text,
   });

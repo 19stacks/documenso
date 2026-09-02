@@ -1,3 +1,4 @@
+import { SENDGRID_TEMPLATE_IDS, sendEmailWithSendGridOrFallback } from '@documenso/email/sendgrid';
 import DocumentInviteEmailTemplate from '@documenso/email/templates/document-invite';
 import { isRecipientEmailValidForSending } from '@documenso/lib/utils/recipients';
 import { prisma } from '@documenso/prisma';
@@ -14,7 +15,12 @@ import { createElement } from 'react';
 
 import { getI18nInstance } from '../../../client-only/providers/i18n-server';
 import { NEXT_PUBLIC_WEBAPP_URL } from '../../../constants/app';
-import { RECIPIENT_ROLE_TO_EMAIL_TYPE, RECIPIENT_ROLES_DESCRIPTION } from '../../../constants/recipient-roles';
+import {
+  RECIPIENT_ROLE_TO_EMAIL_BUTTON_LABEL,
+  RECIPIENT_ROLE_TO_EMAIL_SUBTEXT,
+  RECIPIENT_ROLE_TO_EMAIL_TYPE,
+  RECIPIENT_ROLES_DESCRIPTION,
+} from '../../../constants/recipient-roles';
 import { buildEnvelopeEmailHeaders } from '../../../server-only/email/build-envelope-email-headers';
 import { getEmailContext } from '../../../server-only/email/get-email-context';
 import { assertOrganisationRatesAndLimits } from '../../../server-only/rate-limit/assert-organisation-rates-and-limits';
@@ -215,14 +221,40 @@ export const run = async ({ payload, io }: { payload: TSendSigningEmailJobDefini
         }),
       ]);
 
-      await emailTransport.sendMail({
+      const resolvedSubject = renderCustomEmailTemplate(documentMeta?.subject || emailSubject, customEmailTemplate);
+
+      await sendEmailWithSendGridOrFallback({
+        transporter: emailTransport,
+        templateId: SENDGRID_TEMPLATE_IDS['document-invite'],
+        dynamicTemplateData: {
+          documentName: envelope.title,
+          inviterName: user.name || undefined,
+          inviterEmail:
+            organisationType === OrganisationType.ORGANISATION ? team?.teamEmail?.email || user.email : user.email,
+          assetBaseUrl,
+          signDocumentLink,
+          customBody: renderCustomEmailTemplate(emailMessage, customEmailTemplate),
+          role: recipient.role,
+          selfSigner,
+          organisationType,
+          teamName: team?.name,
+          teamEmail: team?.teamEmail?.email,
+          includeSenderDetails: settings.includeSenderDetails,
+          reportUrl,
+          subject: resolvedSubject,
+          isOrganisation: organisationType === OrganisationType.ORGANISATION,
+          showButton: recipient.role !== RecipientRole.CC,
+          actionVerb: recipientActionVerb,
+          buttonLabel: RECIPIENT_ROLE_TO_EMAIL_BUTTON_LABEL[recipient.role],
+          subtext: RECIPIENT_ROLE_TO_EMAIL_SUBTEXT[recipient.role],
+        },
         to: {
           name: recipient.name,
           address: recipient.email,
         },
         from: senderEmail,
         replyTo: replyToEmail,
-        subject: renderCustomEmailTemplate(documentMeta?.subject || emailSubject, customEmailTemplate),
+        subject: resolvedSubject,
         html,
         text,
         headers: buildEnvelopeEmailHeaders({

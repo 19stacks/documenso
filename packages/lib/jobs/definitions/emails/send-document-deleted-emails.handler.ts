@@ -1,3 +1,4 @@
+import { SENDGRID_TEMPLATE_IDS, sendEmailWithSendGridOrFallback } from '@documenso/email/sendgrid';
 import DocumentCancelTemplate from '@documenso/email/templates/document-cancel';
 import { msg } from '@lingui/core/macro';
 import { createElement } from 'react';
@@ -54,14 +55,25 @@ export const run = async ({ payload, io }: { payload: TSendDocumentDeletedEmails
         renderEmailWithI18N(template, { lang: emailLanguage, branding, plainText: true }),
       ]);
 
-      await emailTransport.sendMail({
+      const resolvedSubject = i18n._(msg`Document Cancelled`);
+
+      await sendEmailWithSendGridOrFallback({
+        transporter: emailTransport,
+        templateId: SENDGRID_TEMPLATE_IDS['document-deleted'],
+        dynamicTemplateData: {
+          documentName,
+          inviterName: inviterName || undefined,
+          inviterEmail,
+          assetBaseUrl,
+          subject: resolvedSubject,
+        },
         to: {
           address: recipient.email,
           name: recipient.name,
         },
         from: senderEmail,
         replyTo: replyToEmail,
-        subject: i18n._(msg`Document Cancelled`),
+        subject: resolvedSubject,
         html,
         text,
       });

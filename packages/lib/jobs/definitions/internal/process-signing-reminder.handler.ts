@@ -1,3 +1,4 @@
+import { SENDGRID_TEMPLATE_IDS, sendEmailWithSendGridOrFallback } from '@documenso/email/sendgrid';
 import DocumentReminderEmailTemplate from '@documenso/email/templates/document-reminder';
 import { prisma } from '@documenso/prisma';
 import { msg } from '@lingui/core/macro';
@@ -14,7 +15,11 @@ import { createElement } from 'react';
 
 import { getI18nInstance } from '../../../client-only/providers/i18n-server';
 import { NEXT_PUBLIC_WEBAPP_URL } from '../../../constants/app';
-import { RECIPIENT_ROLES_DESCRIPTION } from '../../../constants/recipient-roles';
+import {
+  RECIPIENT_ROLE_TO_EMAIL_SUBTEXT,
+  RECIPIENT_ROLE_TO_REMINDER_BUTTON_LABEL,
+  RECIPIENT_ROLES_DESCRIPTION,
+} from '../../../constants/recipient-roles';
 import { buildEnvelopeEmailHeaders } from '../../../server-only/email/build-envelope-email-headers';
 import { getEmailContext } from '../../../server-only/email/get-email-context';
 import { assertOrganisationRatesAndLimits } from '../../../server-only/rate-limit/assert-organisation-rates-and-limits';
@@ -204,7 +209,23 @@ export const run = async ({ payload, io }: { payload: TProcessSigningReminderJob
       }),
     ]);
 
-    await emailTransport.sendMail({
+    await sendEmailWithSendGridOrFallback({
+      transporter: emailTransport,
+      templateId: SENDGRID_TEMPLATE_IDS['document-reminder'],
+      dynamicTemplateData: {
+        recipientName: recipient.name,
+        documentName: envelope.title,
+        assetBaseUrl,
+        signDocumentLink,
+        customBody: emailMessage,
+        role: recipient.role,
+        reportUrl,
+        subject: emailSubject,
+        showButton: recipient.role !== RecipientRole.CC,
+        actionVerb: recipientActionVerb,
+        buttonLabel: RECIPIENT_ROLE_TO_REMINDER_BUTTON_LABEL[recipient.role],
+        subtext: RECIPIENT_ROLE_TO_EMAIL_SUBTEXT[recipient.role],
+      },
       to: {
         name: recipient.name,
         address: recipient.email,

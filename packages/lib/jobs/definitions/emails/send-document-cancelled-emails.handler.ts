@@ -1,3 +1,4 @@
+import { SENDGRID_TEMPLATE_IDS, sendEmailWithSendGridOrFallback } from '@documenso/email/sendgrid';
 import DocumentCancelTemplate from '@documenso/email/templates/document-cancel';
 import { isRecipientEmailValidForSending } from '@documenso/lib/utils/recipients';
 import { prisma } from '@documenso/prisma';
@@ -142,14 +143,26 @@ export const run = async ({ payload, io }: { payload: TSendDocumentCancelledEmai
           }),
         ]);
 
-        await emailTransport.sendMail({
+        const resolvedSubject = i18n._(msg`Document "${envelope.title}" Cancelled`);
+
+        await sendEmailWithSendGridOrFallback({
+          transporter: emailTransport,
+          templateId: SENDGRID_TEMPLATE_IDS['document-cancelled'],
+          dynamicTemplateData: {
+            documentName: envelope.title,
+            inviterName: documentOwner.name || undefined,
+            inviterEmail: documentOwner.email,
+            assetBaseUrl: NEXT_PUBLIC_WEBAPP_URL(),
+            cancellationReason: cancellationReason || 'The document has been cancelled.',
+            subject: resolvedSubject,
+          },
           to: {
             name: recipient.name,
             address: recipient.email,
           },
           from: senderEmail,
           replyTo: replyToEmail,
-          subject: i18n._(msg`Document "${envelope.title}" Cancelled`),
+          subject: resolvedSubject,
           html,
           text,
         });

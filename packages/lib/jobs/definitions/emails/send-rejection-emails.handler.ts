@@ -1,4 +1,5 @@
 import { mailer } from '@documenso/email/mailer';
+import { SENDGRID_TEMPLATE_IDS, sendEmailWithSendGridOrFallback } from '@documenso/email/sendgrid';
 import DocumentRejectedEmail from '@documenso/email/templates/document-rejected';
 import DocumentRejectionConfirmedEmail from '@documenso/email/templates/document-rejection-confirmed';
 import { isRecipientEmailValidForSending } from '@documenso/lib/utils/recipients';
@@ -97,14 +98,26 @@ export const run = async ({ payload, io }: { payload: TSendSigningRejectionEmail
         }),
       ]);
 
-      await emailTransport.sendMail({
+      const resolvedSubject = i18n._(msg`Document "${envelope.title}" - Rejection Confirmed`);
+
+      await sendEmailWithSendGridOrFallback({
+        transporter: emailTransport,
+        templateId: SENDGRID_TEMPLATE_IDS['document-rejection-confirmed'],
+        dynamicTemplateData: {
+          recipientName: recipient.name,
+          documentName: envelope.title,
+          documentOwnerName: envelope.user.name || envelope.user.email,
+          reason: recipient.rejectionReason || '',
+          assetBaseUrl: NEXT_PUBLIC_WEBAPP_URL(),
+          subject: resolvedSubject,
+        },
         to: {
           name: recipient.name,
           address: recipient.email,
         },
         from: senderEmail,
         replyTo: replyToEmail,
-        subject: i18n._(msg`Document "${envelope.title}" - Rejection Confirmed`),
+        subject: resolvedSubject,
         html,
         text,
       });
@@ -130,13 +143,25 @@ export const run = async ({ payload, io }: { payload: TSendSigningRejectionEmail
       }),
     ]);
 
-    await mailer.sendMail({
+    const resolvedSubject = i18n._(msg`Document "${envelope.title}" - Rejected by ${recipient.name}`);
+
+    await sendEmailWithSendGridOrFallback({
+      transporter: mailer,
+      templateId: SENDGRID_TEMPLATE_IDS['document-rejected'],
+      dynamicTemplateData: {
+        recipientName: recipient.name,
+        documentName: envelope.title,
+        documentUrl: `${NEXT_PUBLIC_WEBAPP_URL()}${formatDocumentsPath(envelope.team?.url)}/${envelope.id}`,
+        rejectionReason: recipient.rejectionReason || '',
+        assetBaseUrl: NEXT_PUBLIC_WEBAPP_URL(),
+        subject: resolvedSubject,
+      },
       to: {
         name: documentOwner.name || '',
         address: documentOwner.email,
       },
       from: DOCUMENSO_INTERNAL_EMAIL, // Purposefully using internal email here.
-      subject: i18n._(msg`Document "${envelope.title}" - Rejected by ${recipient.name}`),
+      subject: resolvedSubject,
       html,
       text,
     });
