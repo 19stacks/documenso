@@ -651,6 +651,9 @@ model Recipient {
   readStatus           ReadStatus    @default(NOT_OPENED)
   signingStatus        SigningStatus @default(NOT_SIGNED)
   sendStatus           SendStatus    @default(NOT_SENT)
+  /// Wize portal link token. Permanent contact link offered after signing.
+  /// Written by Wize via the v2 `envelope/recipient/portal-token` endpoint.
+  portalToken          String?       @db.VarChar(64)
   envelope             Envelope      @relation(fields: [envelopeId], references: [id], onDelete: Cascade)
   fields               Field[]
   signatures           Signature[]
