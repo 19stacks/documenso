@@ -1,6 +1,5 @@
 import signingCelebration from '@documenso/assets/images/signing-celebration.png';
 import { getOptionalSession } from '@documenso/auth/server/lib/utils/get-session';
-import { useOptionalSession } from '@documenso/lib/client-only/providers/session';
 import { isSignupEnabledForProvider } from '@documenso/lib/constants/auth';
 import { loadRecipientBrandingByTeamId } from '@documenso/lib/server-only/branding/load-recipient-branding';
 import { getDocumentAndSenderByToken } from '@documenso/lib/server-only/document/get-document-by-token';
@@ -11,7 +10,6 @@ import { getRecipientSignatures } from '@documenso/lib/server-only/recipient/get
 import { getUserByEmail } from '@documenso/lib/server-only/user/get-user-by-email';
 import { isDocumentCompleted } from '@documenso/lib/utils/document';
 import { trpc } from '@documenso/trpc/react';
-import { DocumentShareButton } from '@documenso/ui/components/document/document-share-button';
 import { SigningCard3D } from '@documenso/ui/components/signing-card';
 import { cn } from '@documenso/ui/lib/utils';
 import { Badge } from '@documenso/ui/primitives/badge';
@@ -19,8 +17,7 @@ import { Button } from '@documenso/ui/primitives/button';
 import { useLingui } from '@lingui/react';
 import { Trans } from '@lingui/react/macro';
 import { DocumentStatus, FieldType, RecipientRole } from '@prisma/client';
-import { CheckCircle2, Clock8, DownloadIcon, Loader2 } from 'lucide-react';
-import { Link } from 'react-router';
+import { ArrowUpRight, CheckCircle2, Clock8, DownloadIcon, Loader2 } from 'lucide-react';
 import { match } from 'ts-pattern';
 
 import { EnvelopeDownloadDialog } from '~/components/dialogs/envelope-download-dialog';
@@ -85,9 +82,30 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
   const canSignUp = !isExistingUser && isSignupEnabledForProvider('email');
 
+  /*
+   * The two values below feed the Documenso "Go Back Home" button only, which
+   * is disabled in this fork (see the component). Kept so re-enabling it is a
+   * UI change alone; delete together with that block.
+   */
   const canRedirectToFolder = user && document.userId === user.id && document.folderId && document.team?.url;
 
   const returnToHomePath = canRedirectToFolder ? `/t/${document.team.url}/documents/f/${document.folderId}` : '/';
+
+  /*
+   * The contact's own portal, offered once their part is done. Only makes
+   * sense when Wize has stored a portal token on the recipient and this
+   * deployment knows where the Wize portal lives.
+   */
+  const portalBaseUrl = process.env.NEXT_PRIVATE_WIZE_PORTAL_URL;
+
+  const portalUrl =
+    recipient.portalToken && portalBaseUrl ? `${portalBaseUrl.replace(/\/+$/, '')}/p/${recipient.portalToken}` : null;
+
+  if (recipient.portalToken && !portalBaseUrl) {
+    console.warn(
+      `Recipient has a portal token but NEXT_PRIVATE_WIZE_PORTAL_URL is not set; hiding the portal button. recipient=${recipient.id}`,
+    );
+  }
 
   return {
     isDocumentAccessValid: true,
@@ -98,6 +116,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     document,
     recipient,
     returnToHomePath,
+    portalUrl,
     branding,
   };
 }
@@ -105,8 +124,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 export default function CompletedSigningPage({ loaderData }: Route.ComponentProps) {
   const { _ } = useLingui();
 
-  const { sessionData } = useOptionalSession();
-  const user = sessionData?.user;
   const cspNonce = useCspNonce();
 
   const {
@@ -117,7 +134,7 @@ export default function CompletedSigningPage({ loaderData }: Route.ComponentProp
     document,
     recipient,
     recipientEmail,
-    returnToHomePath,
+    portalUrl,
     branding,
   } = loaderData;
 
@@ -249,11 +266,29 @@ export default function CompletedSigningPage({ loaderData }: Route.ComponentProp
               ))}
 
             <div className="mt-8 flex w-full max-w-xs flex-col items-stretch gap-4 md:w-auto md:max-w-none md:flex-row md:items-center">
-              <DocumentShareButton
-                documentId={document.id}
-                token={recipient.token}
-                className="w-full max-w-none md:flex-1"
-              />
+              {/*
+                TODO(wize): the Documenso "Go Back Home" button is disabled
+                until Wize member signers (who carry no portal token) can be
+                detected and sent to their Wize dashboard. Re-enabling it needs
+                the `react-router` `Link` import and the loader's
+                `returnToHomePath` destructured again.
+                {user && (
+                  <Button asChild>
+                    <Link to={returnToHomePath}>
+                      <Trans>Go Back Home</Trans>
+                    </Link>
+                  </Button>
+                )}
+              */}
+
+              {portalUrl && (
+                <Button asChild>
+                  <a href={portalUrl} target="_blank" rel="noreferrer">
+                    <ArrowUpRight className="mr-2 h-5 w-5" />
+                    <Trans>Go to Portal</Trans>
+                  </a>
+                </Button>
+              )}
 
               {isDocumentCompleted(document) && (
                 <EnvelopeDownloadDialog
@@ -268,14 +303,6 @@ export default function CompletedSigningPage({ loaderData }: Route.ComponentProp
                     </Button>
                   }
                 />
-              )}
-
-              {user && (
-                <Button asChild>
-                  <Link to={returnToHomePath}>
-                    <Trans>Go Back Home</Trans>
-                  </Link>
-                </Button>
               )}
             </div>
           </div>

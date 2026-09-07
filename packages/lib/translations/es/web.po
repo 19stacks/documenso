@@ -6002,7 +6002,6 @@ msgstr "Regresar a casa"
 
 #: apps/remix/app/routes/_recipient+/sign.$token+/_index.tsx
 #: apps/remix/app/routes/_recipient+/sign.$token+/_index.tsx
-#: apps/remix/app/routes/_recipient+/sign.$token+/complete.tsx
 msgid "Go Back Home"
 msgstr "Regresar a casa"
 
@@ -6030,6 +6029,10 @@ msgstr "Ir a la página siguiente"
 #: apps/remix/app/routes/_authenticated+/admin+/documents.$id.tsx
 msgid "Go to owner"
 msgstr "Ir al propietario"
+
+#: apps/remix/app/routes/_recipient+/sign.$token+/complete.tsx
+msgid "Go to Portal"
+msgstr ""
 
 #: packages/ui/primitives/data-table-pagination.tsx
 msgid "Go to previous page"

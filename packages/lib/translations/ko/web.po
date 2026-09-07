@@ -6002,7 +6002,6 @@ msgstr "홈으로 돌아가기"
 
 #: apps/remix/app/routes/_recipient+/sign.$token+/_index.tsx
 #: apps/remix/app/routes/_recipient+/sign.$token+/_index.tsx
-#: apps/remix/app/routes/_recipient+/sign.$token+/complete.tsx
 msgid "Go Back Home"
 msgstr "홈으로 돌아가기"
 
@@ -6030,6 +6029,10 @@ msgstr "다음 페이지로 이동하기"
 #: apps/remix/app/routes/_authenticated+/admin+/documents.$id.tsx
 msgid "Go to owner"
 msgstr "소유자로 이동"
+
+#: apps/remix/app/routes/_recipient+/sign.$token+/complete.tsx
+msgid "Go to Portal"
+msgstr ""
 
 #: packages/ui/primitives/data-table-pagination.tsx
 msgid "Go to previous page"
