@@ -79,4 +79,4 @@ tmp/
 Command
 
 deploy/
-Dockerfile
+/Dockerfile
