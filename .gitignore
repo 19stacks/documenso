@@ -77,3 +77,6 @@ tmp/
 .opencode/package-lock.json
 
 Command
+
+deploy/
+Dockerfile
